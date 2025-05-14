@@ -6,6 +6,7 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	Auth     AuthConfig
+	Logger   LoggerConfig
 }
 
 type ServerConfig struct {
@@ -29,4 +30,8 @@ type DatabaseConfig struct {
 type AuthConfig struct {
 	JWTSecret        string
 	TokenExpireDelta time.Duration
+}
+
+type LoggerConfig struct {
+	Level string
 }
