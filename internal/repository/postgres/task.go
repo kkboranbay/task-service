@@ -191,5 +191,16 @@ func (r *TaskRepository) Update(ctx context.Context, id, userID int64, req model
 }
 
 func (r *TaskRepository) Delete(ctx context.Context, id, userID int64) error {
-	panic("implement me")
+	query := `DELETE FROM tasks WHERE id = $1 AND user_id = $2`
+
+	result, err := r.pool.Exec(ctx, query, id, userID)
+	if err != nil {
+		return fmt.Errorf("ошибка удаления задачи: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("задача не найдена")
+	}
+
+	return nil
 }
