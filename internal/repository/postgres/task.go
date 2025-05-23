@@ -92,7 +92,55 @@ func (r *TaskRepository) GetByID(ctx context.Context, id, userID int64) (*model.
 }
 
 func (r *TaskRepository) List(ctx context.Context, userID int64, limit, offset int) (*model.TaskListResponse, error) {
-	panic("implement me")
+	countQuery := `SELECT count(*) FROM tasks WHERE user_id = $1`
+	var total int64
+	err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка подсчета задач: %w", err)
+	}
+
+	query := `
+		SELECT id, title, description, status, user_id, due_date, created_at, updated_at
+		FROM tasks
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения списка задач: %w", err)
+	}
+	defer rows.Close()
+
+	tasks := make([]model.Task, 0)
+	for rows.Next() {
+		var task model.Task
+		err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.Status,
+			&task.UserID,
+			&task.DueDate,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf("ошибка сканирования строки: %w", err)
+		}
+		tasks = append(tasks, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка обработки строк: %w", err)
+	}
+
+	return &model.TaskListResponse{
+		Total: total,
+		Tasks: tasks,
+	}, nil
 }
 
 func (r *TaskRepository) Update(ctx context.Context, id, userID int64, task model.UpdateTaskRequest) (*model.Task, error) {
