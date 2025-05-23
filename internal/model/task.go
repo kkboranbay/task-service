@@ -14,7 +14,7 @@ type Task struct {
 	ID          int64      `json:"id"`
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
-	Status      string     `json:"status"`
+	Status      TaskStatus `json:"status"`
 	UserID      int64      `json:"user_id"`
 	DueDate     *time.Time `json:"due_date,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
@@ -29,10 +29,10 @@ type CreateTaskRequest struct {
 }
 
 type UpdateTaskRequest struct {
-	Title       *string    `json:"title,omitempty"`
-	Description *string    `json:"description,omitempty"`
-	Status      *string    `json:"status,omitempty"`
-	DueDate     *time.Time `json:"due_date,omitempty"`
+	Title       *string     `json:"title,omitempty"`
+	Description *string     `json:"description,omitempty"`
+	Status      *TaskStatus `json:"status,omitempty"`
+	DueDate     *time.Time  `json:"due_date,omitempty"`
 }
 
 type TaskListResponse struct {
