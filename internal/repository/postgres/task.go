@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kkboranbay/task-service/internal/model"
 	"github.com/kkboranbay/task-service/internal/repository"
@@ -60,7 +62,33 @@ func (r *TaskRepository) Create(ctx context.Context, userID int64, req model.Cre
 }
 
 func (r *TaskRepository) GetByID(ctx context.Context, id, userID int64) (*model.Task, error) {
-	panic("implement me")
+	query := `
+		SELECT id, title, description, status, user_id, due_date, created_at, updated_at
+		FROM tasks
+		WHERE id = $1 AND user_id = $2
+	`
+
+	var task model.Task
+
+	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
+		&task.ID,
+		&task.Title,
+		&task.Description,
+		&task.Status,
+		&task.UserID,
+		&task.DueDate,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("задача не найдена")
+		}
+		return nil, fmt.Errorf("ошибка получения задачи: %w", err)
+	}
+
+	return &task, nil
 }
 
 func (r *TaskRepository) List(ctx context.Context, userID int64, limit, offset int) (*model.TaskListResponse, error) {
