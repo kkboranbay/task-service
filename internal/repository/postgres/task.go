@@ -143,8 +143,51 @@ func (r *TaskRepository) List(ctx context.Context, userID int64, limit, offset i
 	}, nil
 }
 
-func (r *TaskRepository) Update(ctx context.Context, id, userID int64, task model.UpdateTaskRequest) (*model.Task, error) {
-	panic("implement me")
+func (r *TaskRepository) Update(ctx context.Context, id, userID int64, req model.UpdateTaskRequest) (*model.Task, error) {
+	task, err := r.GetByID(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Title != nil {
+		task.Title = *req.Title
+	}
+	if req.Description != nil {
+		task.Description = *req.Description
+	}
+	if req.Status != nil {
+		task.Status = *req.Status
+	}
+	if req.DueDate != nil {
+		task.DueDate = req.DueDate
+	}
+
+	task.UpdatedAt = time.Now()
+
+	query := `
+		UPDATE tasks
+		SET title = $1, description = $2, status = $3, due_date = $4, updated_at = $5
+		WHERE id = $6 AND user_id = $7
+		RETURNING id
+	`
+
+	err = r.pool.QueryRow(
+		ctx,
+		query,
+		task.Title,
+		task.Description,
+		task.Status,
+		task.DueDate,
+		task.UpdatedAt,
+		task.ID,
+		task.UserID,
+	).Scan(&id)
+
+	if err != nil {
+		return nil, fmt.Errorf("ошибка обновления задачи: %w", err)
+	}
+
+	return task, nil
 }
 
 func (r *TaskRepository) Delete(ctx context.Context, id, userID int64) error {
