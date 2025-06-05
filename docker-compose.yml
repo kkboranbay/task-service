@@ -10,6 +10,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       - SERVER_PORT=8080
       - DB_HOST=postgres
@@ -50,6 +52,17 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  migrate:
+    image: migrate/migrate
+    container_name: task-service-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "postgres://postgres:postgres@postgres:5432/taskdb?sslmode=disable", "up" ]
+    restart: "no"
 
 volumes:
   postgres_data:
