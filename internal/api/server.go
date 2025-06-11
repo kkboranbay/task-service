@@ -28,6 +28,10 @@ func NewServer(
 	log *zerolog.Logger,
 ) *Server {
 	router := gin.New()
+
+	healthHandler := handler.NewHealthHandler(db, log)
+	healthHandler.Register(router)
+
 	api := router.Group("/api/v1")
 
 	taskHandler := handler.NewTaskHandler(taskService, log)
