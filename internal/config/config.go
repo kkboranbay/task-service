@@ -61,7 +61,7 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("DB_MAX_CONNS", 10)
 	viper.SetDefault("DB_TIMEOUT", "5s")
 
-	viper.SetDefault("JWT_SECRET", "your-secret-key")
+	viper.SetDefault("JWT_SECRET", "qwertyuiopasdfghjklzxcvbnm123456")
 	viper.SetDefault("JWT_EXPIRE_DELTA", "24h")
 
 	viper.SetDefault("LOG_LEVEL", "info")

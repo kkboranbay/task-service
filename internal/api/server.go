@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kkboranbay/task-service/internal/api/handler"
+	"github.com/kkboranbay/task-service/internal/api/middleware"
 	"github.com/kkboranbay/task-service/internal/config"
 	"github.com/kkboranbay/task-service/internal/service"
 	"github.com/rs/zerolog"
@@ -29,10 +30,13 @@ func NewServer(
 ) *Server {
 	router := gin.New()
 
+	jwtMiddleware := middleware.NewJWTMiddleware(cfg.Auth, log)
+
 	healthHandler := handler.NewHealthHandler(db, log)
 	healthHandler.Register(router)
 
 	api := router.Group("/api/v1")
+	api.Use(jwtMiddleware.AuthRequired())
 
 	taskHandler := handler.NewTaskHandler(taskService, log)
 	taskHandler.Register(api)
