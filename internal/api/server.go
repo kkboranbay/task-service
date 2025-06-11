@@ -35,6 +35,9 @@ func NewServer(
 	healthHandler := handler.NewHealthHandler(db, log)
 	healthHandler.Register(router)
 
+	authHandler := handler.NewAuthHandler(jwtMiddleware, log)
+	authHandler.Register(router)
+
 	api := router.Group("/api/v1")
 	api.Use(jwtMiddleware.AuthRequired())
 

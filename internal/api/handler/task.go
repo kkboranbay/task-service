@@ -33,7 +33,17 @@ func (h *TaskHandler) Register(router *gin.RouterGroup) {
 }
 
 func (h *TaskHandler) getUserID(c *gin.Context) (int64, bool) {
-	return 1, true // temp
+	userID, exists := c.Get("user_id")
+	if !exists {
+		h.log.Error().Msg("user_id не найден в контексте")
+		return 0, false
+	}
+	id, ok := userID.(int64)
+	if !ok {
+		h.log.Error().Interface("user_id", userID).Msg("некорректный тип user_id в контексте")
+		return 0, false
+	}
+	return id, true
 }
 
 func (h *TaskHandler) Create(c *gin.Context) {
