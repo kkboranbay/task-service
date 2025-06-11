@@ -56,7 +56,7 @@ func (h *TaskHandler) Create(c *gin.Context) {
 		return
 	}
 
-	task, err := h.taskService.Create(c.Request.Context(), userID, req)
+	task, err := h.taskService.CreateTask(c.Request.Context(), userID, req)
 	if err != nil {
 		h.log.Error().Err(err).Msg("ошибка создания задачи")
 		c.JSON(http.StatusInternalServerError, model.ErrorResponse{
@@ -90,7 +90,7 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	task, err := h.taskService.GetByID(c.Request.Context(), id, userID)
+	task, err := h.taskService.GetTaskByID(c.Request.Context(), id, userID)
 	if err != nil {
 		h.log.Error().Err(err).Int64("id", id).Msg("ошибка получения задачи")
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
@@ -123,7 +123,7 @@ func (h *TaskHandler) List(c *gin.Context) {
 		pageSize = 10
 	}
 
-	tasks, err := h.taskService.List(c.Request.Context(), userID, page, pageSize)
+	tasks, err := h.taskService.GetTaskList(c.Request.Context(), userID, page, pageSize)
 	if err != nil {
 		h.log.Error().Err(err).Msg("ошибка получения списка задач")
 		c.JSON(http.StatusInternalServerError, model.ErrorResponse{
@@ -167,7 +167,7 @@ func (h *TaskHandler) Update(c *gin.Context) {
 		return
 	}
 
-	task, err := h.taskService.Update(c.Request.Context(), id, userID, req)
+	task, err := h.taskService.UpdateTask(c.Request.Context(), id, userID, req)
 	if err != nil {
 		h.log.Error().Err(err).Int64("id", id).Msg("ошибка обновления задачи")
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
@@ -201,7 +201,7 @@ func (h *TaskHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	err = h.taskService.Delete(c.Request.Context(), id, userID)
+	err = h.taskService.DeleteTask(c.Request.Context(), id, userID)
 	if err != nil {
 		h.log.Error().Err(err).Int64("id", id).Msg("ошибка удаления задачи")
 		c.JSON(http.StatusNotFound, model.ErrorResponse{

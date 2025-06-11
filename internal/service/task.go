@@ -21,7 +21,7 @@ func NewTaskService(repo repository.TaskRepository, log *zerolog.Logger) *TaskSe
 	}
 }
 
-func (s *TaskService) Create(ctx context.Context, userID int64, req model.CreateTaskRequest) (*model.Task, error) {
+func (s *TaskService) CreateTask(ctx context.Context, userID int64, req model.CreateTaskRequest) (*model.Task, error) {
 	if req.Title == "" {
 		return nil, errors.New("отсутствует заголовок задачи")
 	}
@@ -38,7 +38,7 @@ func (s *TaskService) Create(ctx context.Context, userID int64, req model.Create
 	return task, nil
 }
 
-func (s *TaskService) GetByID(ctx context.Context, id, userID int64) (*model.Task, error) {
+func (s *TaskService) GetTaskByID(ctx context.Context, id, userID int64) (*model.Task, error) {
 	s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("получение задачи по ID")
 
 	task, err := s.repo.GetByID(ctx, id, userID)
@@ -50,7 +50,7 @@ func (s *TaskService) GetByID(ctx context.Context, id, userID int64) (*model.Tas
 	return task, nil
 }
 
-func (s *TaskService) List(ctx context.Context, userID int64, page, pageSize int) (*model.TaskListResponse, error) {
+func (s *TaskService) GetTaskList(ctx context.Context, userID int64, page, pageSize int) (*model.TaskListResponse, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -74,7 +74,7 @@ func (s *TaskService) List(ctx context.Context, userID int64, page, pageSize int
 	return resp, nil
 }
 
-func (s *TaskService) Update(ctx context.Context, id, userID int64, req model.UpdateTaskRequest) (*model.Task, error) {
+func (s *TaskService) UpdateTask(ctx context.Context, id, userID int64, req model.UpdateTaskRequest) (*model.Task, error) {
 	s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("обновление задачи")
 
 	if req.Status != nil {
@@ -94,7 +94,7 @@ func (s *TaskService) Update(ctx context.Context, id, userID int64, req model.Up
 	return task, nil
 }
 
-func (s *TaskService) Delete(ctx context.Context, id, userID int64) error {
+func (s *TaskService) DeleteTask(ctx context.Context, id, userID int64) error {
 	s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("удаление задачи")
 
 	err := s.repo.Delete(ctx, id, userID)
