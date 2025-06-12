@@ -10,6 +10,7 @@ import (
 	"github.com/kkboranbay/task-service/internal/api/middleware"
 	"github.com/kkboranbay/task-service/internal/config"
 	"github.com/kkboranbay/task-service/internal/service"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"net/http"
 )
@@ -34,10 +35,13 @@ func NewServer(
 	jwtMiddleware := middleware.NewJWTMiddleware(cfg.Auth, log)
 
 	router.Use(requestLogger.Middleware())
+	router.Use(middleware.PrometheusMiddleware())
 	router.Use(gin.Recovery())
 
 	healthHandler := handler.NewHealthHandler(db, log)
 	healthHandler.Register(router)
+
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	authHandler := handler.NewAuthHandler(jwtMiddleware, log)
 	authHandler.Register(router)

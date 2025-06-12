@@ -64,5 +64,18 @@ services:
     command: [ "-path", "/migrations", "-database", "postgres://postgres:postgres@postgres:5432/taskdb?sslmode=disable", "up" ]
     restart: "no"
 
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: task-service-prometheus
+    depends_on:
+      - api
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+
 volumes:
   postgres_data:
