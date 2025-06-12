@@ -1,0 +1,72 @@
+{
+  "id": null,
+  "title": "Task Service Metrics",
+  "tags": ["task-service"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Requests per Second",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[5m]))",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "HTTP Requests by Status",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"2..\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "2xx Success"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"4..\"}[5m]))",
+          "refId": "B",
+          "legendFormat": "4xx Client Error"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+          "refId": "C",
+          "legendFormat": "5xx Server Error"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "id": 3,
+      "title": "95th Percentile Response Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "id": 4,
+      "title": "Requests In Flight",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "http_requests_in_flight",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    }
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "refresh": "5s"
+}
