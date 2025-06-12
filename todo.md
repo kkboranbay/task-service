@@ -1,4 +1,4 @@
 ### TODO LIST
-- logging middleware 
-- prometheus
 - grafana
+- tests
+- postman collection
