@@ -30,7 +30,11 @@ func NewServer(
 ) *Server {
 	router := gin.New()
 
+	requestLogger := middleware.NewRequestLogger(log)
 	jwtMiddleware := middleware.NewJWTMiddleware(cfg.Auth, log)
+
+	router.Use(requestLogger.Middleware())
+	router.Use(gin.Recovery())
 
 	healthHandler := handler.NewHealthHandler(db, log)
 	healthHandler.Register(router)
