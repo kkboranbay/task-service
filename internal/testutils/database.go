@@ -3,6 +3,7 @@ package testutils
 import (
 	"context"
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kkboranbay/task-service/internal/config"
 	pg "github.com/kkboranbay/task-service/pkg/postgres"
@@ -46,6 +47,9 @@ func NewTestDB(t *testing.T) *TestDB {
 	cfg.DBName = dbName
 	testPool, err := pg.NewPool(ctx, cfg)
 	require.NoError(t, err, "Failed to connect to test database")
+
+	err = runMigrations(ctx, cfg)
+	require.NoError(t, err, "Failed to run migrations")
 
 	return &TestDB{
 		Pool:   testPool,
@@ -94,6 +98,29 @@ func (tdb *TestDB) Truncate(t *testing.T) {
 	ctx := context.Background()
 	_, err := tdb.Pool.Exec(ctx, "TRUNCATE TABLE tasks RESTART IDENTITY CASCADE")
 	require.NoError(t, err, "Failed to truncate tables")
+}
+
+func runMigrations(ctx context.Context, cfg config.DatabaseConfig) error {
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		cfg.User,
+		cfg.Password,
+		cfg.Host,
+		cfg.Port,
+		cfg.DBName,
+	)
+
+	m, err := migrate.New("file://../../migrations", connStr)
+	if err != nil {
+		return fmt.Errorf("failed to create migrate instance: %w", err)
+	}
+	defer m.Close()
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+
+	return nil
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
