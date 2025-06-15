@@ -67,3 +67,7 @@ func LoginRequestFixture(overrides ...func(*model.LoginRequest)) model.LoginRequ
 func StringPtr(s string) *string {
 	return &s
 }
+
+func TaskStatusPtr(s model.TaskStatus) *model.TaskStatus {
+	return &s
+}

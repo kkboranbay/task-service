@@ -244,6 +244,87 @@ func (suite *TaskRepositoryTestSuite) TestList() {
 	}
 }
 
+func (suite *TaskRepositoryTestSuite) TestUpdate() {
+	userID := int64(1)
+	req := testutils.CreateTaskRequestFixture()
+	createdTask, err := suite.repo.Create(suite.ctx, userID, req)
+	require.NoError(suite.T(), err)
+
+	tests := []struct {
+		name    string
+		id      int64
+		userID  int64
+		req     model.UpdateTaskRequest
+		wantErr bool
+	}{
+		{
+			name:   "update_title",
+			id:     createdTask.ID,
+			userID: userID,
+			req: testutils.UpdateTaskRequestFixture(func(r *model.UpdateTaskRequest) {
+				r.Title = testutils.StringPtr("Updated Title")
+				r.Description = nil
+				r.Status = nil
+			}),
+			wantErr: false,
+		},
+		{
+			name:   "update_all_fields",
+			id:     createdTask.ID,
+			userID: userID,
+			req: testutils.UpdateTaskRequestFixture(func(r *model.UpdateTaskRequest) {
+				r.Title = testutils.StringPtr("Updated Title")
+				r.Description = testutils.StringPtr("Updated Description")
+				r.Status = testutils.TaskStatusPtr(model.TaskStatusCompleted)
+			}),
+			wantErr: false,
+		},
+		{
+			name:    "non_existing_task",
+			id:      999,
+			userID:  userID,
+			req:     testutils.UpdateTaskRequestFixture(),
+			wantErr: true,
+		},
+		{
+			name:    "wrong_user",
+			id:      createdTask.ID,
+			userID:  999,
+			req:     testutils.UpdateTaskRequestFixture(),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			task, err := suite.repo.Update(suite.ctx, tt.id, tt.userID, tt.req)
+			if tt.wantErr {
+				assert.Error(suite.T(), err)
+				assert.Nil(suite.T(), task)
+				return
+			}
+
+			require.NoError(suite.T(), err)
+			require.NotNil(suite.T(), task)
+
+			assert.Equal(suite.T(), tt.id, task.ID)
+			assert.Equal(suite.T(), tt.userID, task.UserID)
+
+			if tt.req.Title != nil {
+				assert.Equal(suite.T(), *tt.req.Title, task.Title)
+			}
+			if tt.req.Description != nil {
+				assert.Equal(suite.T(), *tt.req.Description, task.Description)
+			}
+			if tt.req.Status != nil {
+				assert.Equal(suite.T(), *tt.req.Status, task.Status)
+			}
+
+			assert.True(suite.T(), task.UpdatedAt.After(task.CreatedAt))
+		})
+	}
+}
+
 func TestTaskRepositorySuite(t *testing.T) {
 	suite.Run(t, new(TaskRepositoryTestSuite))
 }
