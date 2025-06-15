@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"github.com/kkboranbay/task-service/internal/model"
 	"github.com/kkboranbay/task-service/internal/testutils"
 	"github.com/stretchr/testify/assert"
@@ -142,6 +143,103 @@ func (suite *TaskRepositoryTestSuite) TestGetByID() {
 			assert.Equal(suite.T(), createdTask.Title, task.Title)
 			assert.Equal(suite.T(), createdTask.Description, task.Description)
 			assert.Equal(suite.T(), createdTask.Status, task.Status)
+		})
+	}
+}
+
+func (suite *TaskRepositoryTestSuite) TestList() {
+	userID := int64(1)
+	otherUserID := int64(2)
+
+	for i := 0; i < 5; i++ {
+		req := testutils.CreateTaskRequestFixture(func(r *model.CreateTaskRequest) {
+			r.Title = fmt.Sprintf("Task %d", i+1)
+		})
+		_, err := suite.repo.Create(suite.ctx, userID, req)
+		require.NoError(suite.T(), err)
+	}
+
+	req := testutils.CreateTaskRequestFixture(func(r *model.CreateTaskRequest) {
+		r.Title = "Other User Task"
+	})
+	_, err := suite.repo.Create(suite.ctx, otherUserID, req)
+	require.NoError(suite.T(), err)
+
+	tests := []struct {
+		name      string
+		userID    int64
+		limit     int
+		offset    int
+		wantCount int
+		wantTotal int64
+		wantErr   bool
+	}{
+		{
+			name:      "get_all_tasks",
+			userID:    userID,
+			limit:     10,
+			offset:    0,
+			wantCount: 5,
+			wantTotal: 5,
+			wantErr:   false,
+		},
+		{
+			name:      "pagination_first_page",
+			userID:    userID,
+			limit:     3,
+			offset:    0,
+			wantCount: 3,
+			wantTotal: 5,
+			wantErr:   false,
+		},
+		{
+			name:      "pagination_second_page",
+			userID:    userID,
+			limit:     3,
+			offset:    3,
+			wantCount: 2,
+			wantTotal: 5,
+			wantErr:   false,
+		},
+		{
+			name:      "other_user_tasks",
+			userID:    otherUserID,
+			limit:     10,
+			offset:    0,
+			wantCount: 1,
+			wantTotal: 1,
+			wantErr:   false,
+		},
+		{
+			name:      "non_existing_user",
+			userID:    999,
+			limit:     10,
+			offset:    0,
+			wantCount: 0,
+			wantTotal: 0,
+			wantErr:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			result, err := suite.repo.List(suite.ctx, tt.userID, tt.limit, tt.offset)
+
+			if tt.wantErr {
+				assert.Error(suite.T(), err)
+				assert.Nil(suite.T(), result)
+				return
+			}
+
+			require.NoError(suite.T(), err)
+			require.NotNil(suite.T(), result)
+
+			assert.Len(suite.T(), result.Tasks, tt.wantCount)
+			assert.Equal(suite.T(), tt.wantTotal, result.Total)
+
+			for _, task := range result.Tasks {
+				assert.Equal(suite.T(), tt.userID, task.UserID)
+			}
 		})
 	}
 }
