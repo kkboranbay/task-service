@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kkboranbay/task-service/internal/config"
 	pg "github.com/kkboranbay/task-service/pkg/postgres"
 	"github.com/stretchr/testify/require"
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -22,7 +26,7 @@ type TestDB struct {
 func NewTestDB(t *testing.T) *TestDB {
 	t.Helper()
 
-	dbName := fmt.Sprintf("test_%d_%d", time.Now().UnixNano(), t.Name())
+	dbName := fmt.Sprintf("test_%d", time.Now().UnixNano())
 
 	cfg := config.DatabaseConfig{
 		Host:     getEnvOrDefault("TEST_DB_HOST", "localhost"),
@@ -101,6 +105,10 @@ func (tdb *TestDB) Truncate(t *testing.T) {
 }
 
 func runMigrations(ctx context.Context, cfg config.DatabaseConfig) error {
+	_, filename, _, _ := runtime.Caller(0) // путь до текущего файла (database.go)
+	basePath := filepath.Join(filepath.Dir(filename), "../../migrations")
+	sourceURL := "file://" + basePath
+
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.User,
@@ -110,7 +118,7 @@ func runMigrations(ctx context.Context, cfg config.DatabaseConfig) error {
 		cfg.DBName,
 	)
 
-	m, err := migrate.New("file://../../migrations", connStr)
+	m, err := migrate.New(sourceURL, connStr)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
