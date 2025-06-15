@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kkboranbay/task-service/internal/model"
 	"github.com/kkboranbay/task-service/internal/repository"
+	"strings"
 	"time"
 )
 
@@ -20,6 +21,10 @@ func NewTaskRepository(pool *pgxpool.Pool) repository.TaskRepository {
 }
 
 func (r *TaskRepository) Create(ctx context.Context, userID int64, req model.CreateTaskRequest) (*model.Task, error) {
+	if strings.TrimSpace(req.Title) == "" {
+		return nil, fmt.Errorf("title cannot be empty")
+	}
+
 	status := req.Status
 	if status == "" {
 		status = model.TaskStatusPending
