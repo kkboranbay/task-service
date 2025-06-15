@@ -325,6 +325,55 @@ func (suite *TaskRepositoryTestSuite) TestUpdate() {
 	}
 }
 
+func (suite *TaskRepositoryTestSuite) TestDelete() {
+	userID := int64(1)
+	req := testutils.CreateTaskRequestFixture()
+	createdTask, err := suite.repo.Create(suite.ctx, userID, req)
+	require.NoError(suite.T(), err)
+
+	tests := []struct {
+		name    string
+		id      int64
+		userID  int64
+		wantErr bool
+	}{
+		{
+			name:    "delete_existing_task",
+			id:      createdTask.ID,
+			userID:  userID,
+			wantErr: false,
+		},
+		{
+			name:    "delete_non_existing_task",
+			id:      999,
+			userID:  userID,
+			wantErr: true,
+		},
+		{
+			name:    "delete_wrong_user",
+			id:      createdTask.ID,
+			userID:  999,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			err := suite.repo.Delete(suite.ctx, tt.id, tt.userID)
+
+			if tt.wantErr {
+				assert.Error(suite.T(), err)
+				return
+			}
+
+			require.NoError(suite.T(), err)
+
+			_, err = suite.repo.GetByID(suite.ctx, tt.id, tt.userID)
+			assert.Error(suite.T(), err)
+		})
+	}
+}
+
 func TestTaskRepositorySuite(t *testing.T) {
 	suite.Run(t, new(TaskRepositoryTestSuite))
 }
