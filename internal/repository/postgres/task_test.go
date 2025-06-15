@@ -5,6 +5,7 @@ import (
 	"github.com/kkboranbay/task-service/internal/model"
 	"github.com/kkboranbay/task-service/internal/testutils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
@@ -87,6 +88,60 @@ func (suite *TaskRepositoryTestSuite) TestCreate() {
 			assert.Equal(suite.T(), model.TaskStatusPending, task.Status)
 			assert.WithinDuration(suite.T(), time.Now(), task.CreatedAt, 5*time.Second)
 			assert.WithinDuration(suite.T(), time.Now(), task.UpdatedAt, 5*time.Second)
+		})
+	}
+}
+
+func (suite *TaskRepositoryTestSuite) TestGetByID() {
+	userID := int64(1)
+	req := testutils.CreateTaskRequestFixture()
+	createdTask, err := suite.repo.Create(suite.ctx, userID, req)
+	require.NoError(suite.T(), err)
+
+	tests := []struct {
+		name    string
+		id      int64
+		userID  int64
+		wantErr bool
+	}{
+		{
+			name:    "existing_task",
+			id:      createdTask.ID,
+			userID:  userID,
+			wantErr: false,
+		},
+		{
+			name:    "non_existing_task",
+			id:      999,
+			userID:  userID,
+			wantErr: true,
+		},
+		{
+			name:    "wrong_user",
+			id:      createdTask.ID,
+			userID:  999,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			task, err := suite.repo.GetByID(suite.ctx, tt.id, tt.userID)
+
+			if tt.wantErr {
+				assert.Error(suite.T(), err)
+				assert.Nil(suite.T(), task)
+				return
+			}
+
+			require.NoError(suite.T(), err)
+			require.NotNil(suite.T(), task)
+
+			assert.Equal(suite.T(), tt.id, task.ID)
+			assert.Equal(suite.T(), tt.userID, task.UserID)
+			assert.Equal(suite.T(), createdTask.Title, task.Title)
+			assert.Equal(suite.T(), createdTask.Description, task.Description)
+			assert.Equal(suite.T(), createdTask.Status, task.Status)
 		})
 	}
 }
