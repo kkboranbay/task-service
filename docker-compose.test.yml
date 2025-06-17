@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  test-postgres:
+    image: postgres:15-alpine
+    container_name: test-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      target: test-base
+    container_name: task-service-integration-tests
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+    environment:
+      - CGO_ENABLED=1
+      - TEST_DB_HOST=test-postgres
+      - TEST_DB_PORT=5432
+      - TEST_DB_USER=postgres
+      - TEST_DB_PASSWORD=postgres
+    command: ["go", "test", "-v", "-race", "-timeout=300s", "./internal/repository/postgres/..."]
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+      - go-cache:/root/.cache/go-build
+
+volumes:
+  go-modules:
+  go-cache:
