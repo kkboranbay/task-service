@@ -144,6 +144,101 @@ func (suite *TaskServiceTestSuite) TestGetTaskByID() {
 	}
 }
 
+func (suite *TaskServiceTestSuite) TestGetTaskList() {
+	tests := []struct {
+		name      string
+		userID    int64
+		page      int
+		pageSize  int
+		setupMock func()
+		wantErr   bool
+	}{
+		{
+			name:     "successful_get_first_page",
+			userID:   1,
+			page:     1,
+			pageSize: 10,
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{
+					Total: 1,
+					Tasks: []model.Task{*testutils.TaskFixture()},
+				}
+				suite.mockRepo.On("List", suite.ctx, int64(1), 10, 0).
+					Return(expectedResponse, nil).Once()
+			},
+		},
+		{
+			name:     "successful_get_second_page",
+			userID:   1,
+			page:     2,
+			pageSize: 5,
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{
+					Tasks: []model.Task{*testutils.TaskFixture()},
+					Total: 10,
+				}
+				suite.mockRepo.On("List", suite.ctx, int64(1), 5, 5).
+					Return(expectedResponse, nil).Once()
+			},
+			wantErr: false,
+		},
+		{
+			name:     "invalid_page_defaults_to_1",
+			userID:   1,
+			page:     0,
+			pageSize: 10,
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{Tasks: []model.Task{}, Total: 0}
+				suite.mockRepo.On("List", suite.ctx, int64(1), 10, 0).
+					Return(expectedResponse, nil).Once()
+			},
+			wantErr: false,
+		},
+		{
+			name:     "invalid_page_size_defaults_to_10",
+			userID:   1,
+			page:     1,
+			pageSize: 0,
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{Tasks: []model.Task{}, Total: 0}
+				suite.mockRepo.On("List", suite.ctx, int64(1), 10, 0).
+					Return(expectedResponse, nil).Once()
+			},
+			wantErr: false,
+		},
+		{
+			name:     "page_size_too_large_capped_at_100",
+			userID:   1,
+			page:     1,
+			pageSize: 200,
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{Tasks: []model.Task{}}
+				suite.mockRepo.On("List", suite.ctx, int64(1), 100, 0).
+					Return(expectedResponse, nil).Once()
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.setupMock()
+
+			result, err := suite.service.GetTaskList(suite.ctx, tt.userID, tt.page, tt.pageSize)
+
+			if tt.wantErr {
+				assert.Error(suite.T(), err)
+				assert.Nil(suite.T(), result)
+			} else {
+				assert.NoError(suite.T(), err)
+				assert.NotNil(suite.T(), result)
+			}
+
+			suite.mockRepo.AssertExpectations(suite.T())
+		})
+	}
+}
+
 func TestTaskServiceSuite(t *testing.T) {
 	suite.Run(t, new(TaskServiceTestSuite))
 }
