@@ -239,6 +239,73 @@ func (suite *TaskServiceTestSuite) TestGetTaskList() {
 	}
 }
 
+func (suite *TaskServiceTestSuite) TestUpdateTask() {
+	tests := []struct {
+		name       string
+		id         int64
+		userID     int64
+		req        model.UpdateTaskRequest
+		setupMock  func()
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:   "successful_update",
+			id:     1,
+			userID: 1,
+			req:    testutils.UpdateTaskRequestFixture(),
+			setupMock: func() {
+				expectedTask := testutils.TaskFixture()
+				suite.mockRepo.On("Update", suite.ctx, int64(1), int64(1), mock.AnythingOfType("model.UpdateTaskRequest")).
+					Return(expectedTask, nil).Once()
+			},
+			wantErr: false,
+		},
+		{
+			name:   "invalid_status",
+			id:     1,
+			userID: 1,
+			req: testutils.UpdateTaskRequestFixture(func(r *model.UpdateTaskRequest) {
+				invalidStatus := model.TaskStatus("invalid")
+				r.Status = &invalidStatus
+			}),
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "некорректный статус задачи",
+		},
+		{
+			name:   "repository_error",
+			id:     1,
+			userID: 1,
+			req:    testutils.UpdateTaskRequestFixture(),
+			setupMock: func() {
+				suite.mockRepo.On("Update", suite.ctx, int64(1), int64(1), mock.AnythingOfType("model.UpdateTaskRequest")).
+					Return(nil, errors.New("database error")).Once()
+			},
+			wantErr:    true,
+			wantErrMsg: "не удалось обновить задачу",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.setupMock()
+
+			task, err := suite.service.UpdateTask(suite.ctx, tt.id, tt.userID, tt.req)
+			if tt.wantErr {
+				assert.Error(suite.T(), err)
+				assert.Contains(suite.T(), err.Error(), tt.wantErrMsg)
+				assert.Nil(suite.T(), task)
+			} else {
+				assert.NoError(suite.T(), err)
+				assert.NotNil(suite.T(), task)
+			}
+
+			suite.mockRepo.AssertExpectations(suite.T())
+		})
+	}
+}
+
 func TestTaskServiceSuite(t *testing.T) {
 	suite.Run(t, new(TaskServiceTestSuite))
 }
