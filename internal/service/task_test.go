@@ -306,6 +306,56 @@ func (suite *TaskServiceTestSuite) TestUpdateTask() {
 	}
 }
 
+func (suite *TaskServiceTestSuite) TestDeleteTask() {
+	tests := []struct {
+		name       string
+		id         int64
+		userID     int64
+		setupMock  func()
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:   "successful_delete",
+			id:     1,
+			userID: 1,
+			setupMock: func() {
+				suite.mockRepo.On("Delete", suite.ctx, int64(1), int64(1)).
+					Return(nil).Once()
+			},
+			wantErr: false,
+		},
+		{
+			name:   "repository_error",
+			id:     1,
+			userID: 1,
+			setupMock: func() {
+				suite.mockRepo.On("Delete", suite.ctx, int64(1), int64(1)).
+					Return(errors.New("database error")).Once()
+			},
+			wantErr:    true,
+			wantErrMsg: "не удалось удалить задачу",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.setupMock()
+
+			err := suite.service.DeleteTask(suite.ctx, tt.id, tt.userID)
+
+			if tt.wantErr {
+				assert.Error(suite.T(), err)
+				assert.Contains(suite.T(), err.Error(), tt.wantErrMsg)
+			} else {
+				assert.NoError(suite.T(), err)
+			}
+
+			suite.mockRepo.AssertExpectations(suite.T())
+		})
+	}
+}
+
 func TestTaskServiceSuite(t *testing.T) {
 	suite.Run(t, new(TaskServiceTestSuite))
 }
