@@ -40,6 +40,18 @@ services:
       - go-modules:/go/pkg/mod
       - go-cache:/root/.cache/go-build
 
+  unit-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      target: test-base
+    container_name: task-service-unit-tests
+    command: ["go", "test", "-v", "-race", "-timeout=300s", "./internal/service/...", "./internal/api/handler/..."]
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+      - go-cache:/root/.cache/go-build
+
 volumes:
   go-modules:
   go-cache:
