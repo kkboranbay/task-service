@@ -295,6 +295,47 @@ func (suite *E2ETestSuite) TestInvalidToken() {
 	assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode)
 }
 
+func (suite *E2ETestSuite) TestValidationErrors() {
+	tests := []struct {
+		name           string
+		requestBody    interface{}
+		expectedStatus int
+	}{
+		{
+			name: "empty_title",
+			requestBody: map[string]interface{}{
+				"title":       "",
+				"description": "Valid description",
+				"status":      model.TaskStatusPending,
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "missing_title",
+			requestBody: map[string]interface{}{
+				"description": "Valid description",
+				"status":      model.TaskStatusPending,
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "empty_body",
+			requestBody:    map[string]interface{}{},
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			resp, err := suite.makeAuthenticatedRequest("POST", "/api/v1/tasks", tt.requestBody)
+			require.NoError(suite.T(), err)
+			defer resp.Body.Close()
+
+			assert.Equal(suite.T(), tt.expectedStatus, resp.StatusCode)
+		})
+	}
+}
+
 func TestE2ESuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }
