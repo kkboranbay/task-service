@@ -296,6 +296,72 @@ func (suite *TaskHandlerTestSuite) TestListTasks() {
 	}
 }
 
+func (suite *TaskHandlerTestSuite) TestUpdateTask() {
+	tests := []struct {
+		name           string
+		taskID         string
+		requestBody    interface{}
+		setupMock      func()
+		expectedStatus int
+		expectedBody   map[string]interface{}
+	}{
+		{
+			name:   "successful_update",
+			taskID: "1",
+			requestBody: testutils.UpdateTaskRequestFixture(func(r *model.UpdateTaskRequest) {
+				r.Title = testutils.StringPtr("Updated Task")
+			}),
+			setupMock: func() {
+				expectedTask := testutils.TaskFixture(func(t *model.Task) {
+					t.Title = "Updated Task"
+				})
+				suite.mockRepo.On("Update", mock.Anything, int64(1), int64(1), mock.AnythingOfType("model.UpdateTaskRequest")).
+					Return(expectedTask, nil).Once()
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: map[string]interface{}{
+				"title": "Updated Task",
+			},
+		},
+		{
+			name:           "invalid_id",
+			taskID:         "invalid",
+			requestBody:    testutils.UpdateTaskRequestFixture(),
+			setupMock:      func() {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody: map[string]interface{}{
+				"code":    float64(400),
+				"message": "некорректный ID задачи",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.setupMock()
+
+			bodyBytes, _ := json.Marshal(tt.requestBody)
+			req := httptest.NewRequest(http.MethodPut, "/api/v1/tasks/"+tt.taskID, bytes.NewReader(bodyBytes))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			suite.router.ServeHTTP(w, req)
+
+			assert.Equal(suite.T(), tt.expectedStatus, w.Code)
+
+			var response map[string]interface{}
+			err := json.Unmarshal(w.Body.Bytes(), &response)
+			require.NoError(suite.T(), err)
+
+			for key, expectedValue := range tt.expectedBody {
+				assert.Equal(suite.T(), expectedValue, response[key], "Field %s mismatch", key)
+			}
+
+			suite.mockRepo.AssertExpectations(suite.T())
+		})
+	}
+}
+
 func TestTaskHandlerSuite(t *testing.T) {
 	suite.Run(t, new(TaskHandlerTestSuite))
 }
