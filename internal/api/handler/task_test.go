@@ -210,6 +210,92 @@ func (suite *TaskHandlerTestSuite) TestGetTask() {
 	}
 }
 
+func (suite *TaskHandlerTestSuite) TestListTasks() {
+	tests := []struct {
+		name           string
+		queryParams    string
+		setupMock      func()
+		expectedStatus int
+		checkResponse  func(*testing.T, map[string]interface{})
+	}{
+		{
+			name:        "successful_list_default_params",
+			queryParams: "",
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{
+					Tasks: []model.Task{*testutils.TaskFixture()},
+					Total: 1,
+				}
+				suite.mockRepo.On("List", mock.Anything, int64(1), 10, 0).
+					Return(expectedResponse, nil).Once()
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, float64(1), response["total"])
+
+				tasks, ok := response["tasks"].([]interface{})
+				require.True(t, ok)
+				assert.Len(t, tasks, 1)
+			},
+		},
+		{
+			name:        "successful_list_with_pagination",
+			queryParams: "?page=2&page_size=5",
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{
+					Tasks: []model.Task{},
+					Total: 10,
+				}
+				suite.mockRepo.On("List", mock.Anything, int64(1), 5, 5).
+					Return(expectedResponse, nil).Once()
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, float64(10), response["total"])
+			},
+		},
+		{
+			name:        "invalid_page_parameter",
+			queryParams: "?page=invalid",
+			setupMock: func() {
+				expectedResponse := &model.TaskListResponse{
+					Tasks: []model.Task{},
+					Total: 0,
+				}
+				suite.mockRepo.On("List", mock.Anything, int64(1), 10, 0).
+					Return(expectedResponse, nil).Once()
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, float64(0), response["total"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.setupMock()
+
+			req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks"+tt.queryParams, nil)
+			w := httptest.NewRecorder()
+
+			suite.router.ServeHTTP(w, req)
+
+			assert.Equal(suite.T(), tt.expectedStatus, w.Code)
+
+			var response map[string]interface{}
+			err := json.Unmarshal(w.Body.Bytes(), &response)
+			require.NoError(suite.T(), err)
+
+			if tt.checkResponse != nil {
+				tt.checkResponse(suite.T(), response)
+			}
+
+			suite.mockRepo.AssertExpectations(suite.T())
+		})
+	}
+}
+
 func TestTaskHandlerSuite(t *testing.T) {
 	suite.Run(t, new(TaskHandlerTestSuite))
 }
