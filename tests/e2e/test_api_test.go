@@ -267,6 +267,21 @@ func (suite *E2ETestSuite) TestTaskListPagination() {
 	assert.Len(suite.T(), page2.Tasks, 5)
 }
 
+func (suite *E2ETestSuite) TestUnauthorizedAccess() {
+	createReq := testutils.CreateTaskRequestFixture()
+	reqBody, _ := json.Marshal(createReq)
+
+	resp, err := suite.httpClient.Post(
+		suite.server.URL+"/api/v1/tasks",
+		"application/json",
+		bytes.NewReader(reqBody),
+	)
+	require.NoError(suite.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode)
+}
+
 func TestE2ESuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }
