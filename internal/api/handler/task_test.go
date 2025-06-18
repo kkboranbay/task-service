@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kkboranbay/task-service/internal/mocks"
 	"github.com/kkboranbay/task-service/internal/model"
@@ -118,6 +119,78 @@ func (suite *TaskHandlerTestSuite) TestCreateTask() {
 
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/tasks", bodyReader)
 			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			suite.router.ServeHTTP(w, req)
+
+			assert.Equal(suite.T(), tt.expectedStatus, w.Code)
+
+			var response map[string]interface{}
+			err := json.Unmarshal(w.Body.Bytes(), &response)
+			require.NoError(suite.T(), err)
+
+			for key, value := range tt.expectedBody {
+				assert.Equal(suite.T(), value, response[key], "Field %s mismatch", key)
+			}
+
+			suite.mockRepo.AssertExpectations(suite.T())
+		})
+	}
+}
+
+func (suite *TaskHandlerTestSuite) TestGetTask() {
+	tests := []struct {
+		name           string
+		taskID         string
+		setupMock      func()
+		expectedStatus int
+		expectedBody   map[string]interface{}
+	}{
+		{
+			name:   "successful_get",
+			taskID: "1",
+			setupMock: func() {
+				expectedTask := testutils.TaskFixture()
+				suite.mockRepo.On("GetByID", mock.Anything, int64(1), int64(1)).
+					Return(expectedTask, nil).Once()
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: map[string]interface{}{
+				"title":       "Test task",
+				"description": "Test Description",
+				"status":      "pending",
+			},
+		},
+		{
+			name:           "invalid_id",
+			taskID:         "invalid",
+			setupMock:      func() {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody: map[string]interface{}{
+				"code":    float64(400),
+				"message": "некорректный ID задачи",
+			},
+		},
+		{
+			name:   "task_not_found",
+			taskID: "999",
+			setupMock: func() {
+				suite.mockRepo.On("GetByID", mock.Anything, int64(999), int64(1)).
+					Return(nil, fmt.Errorf("task not found")).Once()
+			},
+			expectedStatus: http.StatusNotFound,
+			expectedBody: map[string]interface{}{
+				"code":    float64(404),
+				"message": "задача не найдена",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.setupMock()
+
+			req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/"+tt.taskID, nil)
 			w := httptest.NewRecorder()
 
 			suite.router.ServeHTTP(w, req)
