@@ -99,6 +99,18 @@ services:
       - go-modules:/go/pkg/mod
       - go-cache:/root/.cache/go-build
 
+  lint:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      target: lint
+    container_name: task-service-lint
+    command: [ "golangci-lint", "run", "--timeout=10m" ]
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+      - go-cache:/root/.cache/go-build
+
 volumes:
   go-modules:
   go-cache:
