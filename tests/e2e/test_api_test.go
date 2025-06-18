@@ -217,6 +217,56 @@ func (suite *E2ETestSuite) TestTaskCRUDFlow() {
 	assert.Equal(suite.T(), http.StatusNotFound, resp.StatusCode)
 }
 
+func (suite *E2ETestSuite) TestTaskListPagination() {
+	const taskCount = 15
+	createdTasks := make([]*model.Task, taskCount)
+
+	for i := 0; i < taskCount; i++ {
+		createReq := testutils.CreateTaskRequestFixture(func(r *model.CreateTaskRequest) {
+			r.Title = fmt.Sprintf("Task %d", i+1)
+			r.Description = fmt.Sprintf("Description for task %d", i+1)
+			r.Status = model.TaskStatusPending
+		})
+
+		resp, err := suite.makeAuthenticatedRequest("POST", "/api/v1/tasks", createReq)
+		require.NoError(suite.T(), err)
+		defer resp.Body.Close()
+
+		assert.Equal(suite.T(), http.StatusCreated, resp.StatusCode)
+
+		var task model.Task
+		err = json.NewDecoder(resp.Body).Decode(&task)
+		require.NoError(suite.T(), err)
+		createdTasks[i] = &task
+	}
+
+	resp, err := suite.makeAuthenticatedRequest("GET", "/api/v1/tasks?page=1&page_size=10", nil)
+	require.NoError(suite.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+
+	var page1 model.TaskListResponse
+	err = json.NewDecoder(resp.Body).Decode(&page1)
+	require.NoError(suite.T(), err)
+
+	assert.Equal(suite.T(), int64(taskCount), page1.Total)
+	assert.Len(suite.T(), page1.Tasks, 10)
+
+	resp, err = suite.makeAuthenticatedRequest("GET", "/api/v1/tasks?page=2&page_size=10", nil)
+	require.NoError(suite.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+
+	var page2 model.TaskListResponse
+	err = json.NewDecoder(resp.Body).Decode(&page2)
+	require.NoError(suite.T(), err)
+
+	assert.Equal(suite.T(), int64(taskCount), page2.Total)
+	assert.Len(suite.T(), page2.Tasks, 5)
+}
+
 func TestE2ESuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }
