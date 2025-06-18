@@ -1,6 +1,5 @@
 ### TODO LIST
-- unit tests
-- integration tests
-- e2e tests
+- coverage tests
 - ci/cd
-- test container
+- makefile
+- documentation (swagger)
