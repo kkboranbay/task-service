@@ -362,6 +362,62 @@ func (suite *TaskHandlerTestSuite) TestUpdateTask() {
 	}
 }
 
+func (suite *TaskHandlerTestSuite) TestDeleteTask() {
+	tests := []struct {
+		name           string
+		taskID         string
+		setupMock      func()
+		expectedStatus int
+		expectedBody   map[string]interface{}
+	}{
+		{
+			name:   "successful_delete",
+			taskID: "1",
+			setupMock: func() {
+				suite.mockRepo.On("Delete", mock.Anything, int64(1), int64(1)).
+					Return(nil).Once()
+			},
+			expectedStatus: http.StatusNoContent,
+			expectedBody:   nil,
+		},
+		{
+			name:           "invalid_id",
+			taskID:         "invalid",
+			setupMock:      func() {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody: map[string]interface{}{
+				"code":    float64(400),
+				"message": "некорректный ID задачи",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.setupMock()
+
+			req := httptest.NewRequest(http.MethodDelete, "/api/v1/tasks/"+tt.taskID, nil)
+			w := httptest.NewRecorder()
+
+			suite.router.ServeHTTP(w, req)
+
+			assert.Equal(suite.T(), tt.expectedStatus, w.Code)
+
+			if tt.expectedBody != nil {
+				var response map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				require.NoError(suite.T(), err)
+
+				for key, expectedValue := range tt.expectedBody {
+					assert.Equal(suite.T(), expectedValue, response[key], "Field %s mismatch", key)
+				}
+			}
+
+			suite.mockRepo.AssertExpectations(suite.T())
+		})
+	}
+}
+
 func TestTaskHandlerSuite(t *testing.T) {
 	suite.Run(t, new(TaskHandlerTestSuite))
 }
