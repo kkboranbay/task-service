@@ -73,6 +73,32 @@ services:
       - go-modules:/go/pkg/mod
       - go-cache:/root/.cache/go-build
 
+  coverage-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      target: test-base
+    container_name: task-service-coverage-tests
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+    environment:
+      - CGO_ENABLED=1
+      - TEST_DB_HOST=test-postgres
+      - TEST_DB_PORT=5432
+      - TEST_DB_USER=postgres
+      - TEST_DB_PASSWORD=postgres
+    command: >
+      sh -c "
+        go test -v -race -timeout=300s -coverprofile=coverage.out -covermode=atomic ./... &&
+        go tool cover -html=coverage.out -o coverage.html &&
+        go tool cover -func=coverage.out
+      "
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+      - go-cache:/root/.cache/go-build
+
 volumes:
   go-modules:
   go-cache:

@@ -1,0 +1,1691 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>api: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/kkboranbay/task-service/cmd/api/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/kkboranbay/task-service/internal/api/handler/auth.go (0.0%)</option>
+				
+				<option value="file2">github.com/kkboranbay/task-service/internal/api/handler/health.go (0.0%)</option>
+				
+				<option value="file3">github.com/kkboranbay/task-service/internal/api/handler/task.go (70.3%)</option>
+				
+				<option value="file4">github.com/kkboranbay/task-service/internal/api/middleware/auth.go (0.0%)</option>
+				
+				<option value="file5">github.com/kkboranbay/task-service/internal/api/middleware/logging.go (0.0%)</option>
+				
+				<option value="file6">github.com/kkboranbay/task-service/internal/api/middleware/metrics.go (0.0%)</option>
+				
+				<option value="file7">github.com/kkboranbay/task-service/internal/api/server.go (0.0%)</option>
+				
+				<option value="file8">github.com/kkboranbay/task-service/internal/config/config.go (0.0%)</option>
+				
+				<option value="file9">github.com/kkboranbay/task-service/internal/mocks/task_repository.go (0.0%)</option>
+				
+				<option value="file10">github.com/kkboranbay/task-service/internal/repository/postgres/task.go (84.6%)</option>
+				
+				<option value="file11">github.com/kkboranbay/task-service/internal/service/task.go (95.7%)</option>
+				
+				<option value="file12">github.com/kkboranbay/task-service/internal/testutils/database.go (0.0%)</option>
+				
+				<option value="file13">github.com/kkboranbay/task-service/internal/testutils/fixtures.go (0.0%)</option>
+				
+				<option value="file14">github.com/kkboranbay/task-service/pkg/logger/logger.go (0.0%)</option>
+				
+				<option value="file15">github.com/kkboranbay/task-service/pkg/postgres/postgres.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "context"
+        "github.com/kkboranbay/task-service/internal/api"
+        "github.com/kkboranbay/task-service/internal/config"
+        "github.com/kkboranbay/task-service/internal/repository/postgres"
+        "github.com/kkboranbay/task-service/internal/service"
+        "github.com/kkboranbay/task-service/pkg/logger"
+        pg "github.com/kkboranbay/task-service/pkg/postgres"
+        "os"
+        "os/signal"
+        "syscall"
+)
+
+func main() <span class="cov0" title="0">{
+        cfg, err := config.LoadConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                logger.L().Fatal().Err(err).Msg("Ошибка загрузки конфигурации")
+        }</span>
+
+        <span class="cov0" title="0">logger.SetupLogger(cfg.Logger)
+        log := logger.L()
+        log.Info().Msg("Запуск сервиса управления задачами")
+
+        ctx := context.Background()
+        db, err := pg.NewPool(ctx, cfg.Database)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal().Err(err).Msg("Ошибка подключения к базе данных")
+        }</span>
+        <span class="cov0" title="0">defer pg.Close(db)
+
+        taskRepo := postgres.NewTaskRepository(db)
+        taskService := service.NewTaskService(taskRepo, log)
+        server := api.NewServer(db, taskService, *cfg, log)
+        go func() </span><span class="cov0" title="0">{
+                if err := server.Run(); err != nil </span><span class="cov0" title="0">{
+                        log.Fatal().Err(err).Msg("Ошибка запуска сервера")
+                }</span>
+        }()
+        <span class="cov0" title="0">log.Info().Msgf("Сервис запущен на порту %s", cfg.Server.Port)
+
+        quit := make(chan os.Signal, 1)
+        signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+        sig := &lt;-quit
+        log.Info().Str("signal", sig.String()).Msg("Получен сигнал остановки")
+
+        if err := server.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                log.Error().Err(err).Msg("Ошибка при остановке сервера")
+        }</span>
+
+        <span class="cov0" title="0">log.Info().Msg("Сервис остановлен")</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handler
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/kkboranbay/task-service/internal/api/middleware"
+        "github.com/kkboranbay/task-service/internal/model"
+        "github.com/rs/zerolog"
+        "net/http"
+)
+
+type AuthHandler struct {
+        jwtMiddleware *middleware.JWTMiddleware
+        log           *zerolog.Logger
+}
+
+func NewAuthHandler(jwtMiddleware *middleware.JWTMiddleware, log *zerolog.Logger) *AuthHandler <span class="cov0" title="0">{
+        return &amp;AuthHandler{
+                jwtMiddleware: jwtMiddleware,
+                log:           log,
+        }
+}</span>
+
+func (h *AuthHandler) Register(router *gin.Engine) <span class="cov0" title="0">{
+        auth := router.Group("/auth")
+        </span><span class="cov0" title="0">{
+                auth.POST("/login", h.Login)
+        }</span>
+}
+
+func (h *AuthHandler) Login(c *gin.Context) <span class="cov0" title="0">{
+        var req model.LoginRequest
+        if err := c.ShouldBindJSON(&amp;req); err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Msg("ошибка разбора JSON")
+                c.JSON(http.StatusBadRequest, model.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: "некорректные данные запроса",
+                })
+                return
+        }</span>
+
+        <span class="cov0" title="0">if req.Username != "admin" || req.Password != "admin" </span><span class="cov0" title="0">{
+                h.log.Warn().Str("username", req.Username).Msg("неверные учетные данные")
+                c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                        Code:    http.StatusUnauthorized,
+                        Message: "неверные учетные данные",
+                })
+                return
+        }</span>
+
+        <span class="cov0" title="0">userID := int64(1)
+        token, err := h.jwtMiddleware.GenerateToken(userID)
+        if err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Int64("user_id", userID).Msg("ошибка генерации токена")
+                c.JSON(http.StatusInternalServerError, model.ErrorResponse{
+                        Code:    http.StatusInternalServerError,
+                        Message: "не удалось сгенерировать токен",
+                })
+                return
+        }</span>
+
+        <span class="cov0" title="0">h.log.Info().Str("username", req.Username).Int64("user_id", userID).Msg("успешная авторизация")
+
+        c.JSON(http.StatusOK, model.LoginResponse{
+                Token:  token,
+                UserID: userID,
+        })</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handler
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/rs/zerolog"
+        "net/http"
+)
+
+type HealthHandler struct {
+        db  *pgxpool.Pool
+        log *zerolog.Logger
+}
+
+func NewHealthHandler(db *pgxpool.Pool, log *zerolog.Logger) *HealthHandler <span class="cov0" title="0">{
+        return &amp;HealthHandler{
+                db:  db,
+                log: log,
+        }
+}</span>
+
+func (h *HealthHandler) Register(router *gin.Engine) <span class="cov0" title="0">{
+        router.GET("/health", h.Check)
+        router.GET("/readiness", h.Readiness)
+}</span>
+
+type HealthResponse struct {
+        Status string `json:"status"`
+}
+
+func (h *HealthHandler) Check(c *gin.Context) <span class="cov0" title="0">{
+        c.JSON(http.StatusOK, HealthResponse{Status: "ok"})
+}</span>
+
+// Readiness проверяет готовность сервиса к работе, включая соединение с БД
+func (h *HealthHandler) Readiness(c *gin.Context) <span class="cov0" title="0">{
+        if err := h.db.Ping(c.Request.Context()); err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Msg("ошибка подключения к базе данных")
+                c.JSON(http.StatusServiceUnavailable, HealthResponse{Status: "database connection failed"})
+                return
+        }</span>
+
+        <span class="cov0" title="0">c.JSON(http.StatusOK, HealthResponse{Status: "ok"})</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package handler
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/kkboranbay/task-service/internal/model"
+        "github.com/kkboranbay/task-service/internal/service"
+        "github.com/rs/zerolog"
+        "net/http"
+        "strconv"
+)
+
+type TaskHandler struct {
+        taskService *service.TaskService
+        log         *zerolog.Logger
+}
+
+func NewTaskHandler(taskService *service.TaskService, log *zerolog.Logger) *TaskHandler <span class="cov6" title="5">{
+        return &amp;TaskHandler{
+                taskService: taskService,
+                log:         log,
+        }
+}</span>
+
+func (h *TaskHandler) Register(router *gin.RouterGroup) <span class="cov6" title="5">{
+        tasks := router.Group("/tasks")
+        </span><span class="cov6" title="5">{
+                tasks.POST("", h.Create)
+                tasks.GET("", h.List)
+                tasks.GET("/:id", h.GetByID)
+                tasks.PUT("/:id", h.Update)
+                tasks.DELETE("/:id", h.Delete)
+        }</span>
+}
+
+func (h *TaskHandler) getUserID(c *gin.Context) (int64, bool) <span class="cov10" title="13">{
+        userID, exists := c.Get("user_id")
+        if !exists </span><span class="cov0" title="0">{
+                h.log.Error().Msg("user_id не найден в контексте")
+                return 0, false
+        }</span>
+        <span class="cov10" title="13">id, ok := userID.(int64)
+        if !ok </span><span class="cov0" title="0">{
+                h.log.Error().Interface("user_id", userID).Msg("некорректный тип user_id в контексте")
+                return 0, false
+        }</span>
+        <span class="cov10" title="13">return id, true</span>
+}
+
+func (h *TaskHandler) Create(c *gin.Context) <span class="cov4" title="3">{
+        userID, ok := h.getUserID(c)
+        if !ok </span><span class="cov0" title="0">{
+                c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                        Code:    http.StatusUnauthorized,
+                        Message: "unauthorized",
+                })
+                return
+        }</span>
+
+        <span class="cov4" title="3">var req model.CreateTaskRequest
+        if err := c.ShouldBindJSON(&amp;req); err != nil </span><span class="cov3" title="2">{
+                h.log.Error().Err(err).Msg("ошибка разбора JSON")
+                c.JSON(http.StatusBadRequest, model.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: "некорректные данные запроса",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">task, err := h.taskService.CreateTask(c.Request.Context(), userID, req)
+        if err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Msg("ошибка создания задачи")
+                c.JSON(http.StatusInternalServerError, model.ErrorResponse{
+                        Code:    http.StatusInternalServerError,
+                        Message: "не удалось создать задачу",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">c.JSON(http.StatusCreated, task)</span>
+}
+
+func (h *TaskHandler) GetByID(c *gin.Context) <span class="cov4" title="3">{
+        userID, ok := h.getUserID(c)
+        if !ok </span><span class="cov0" title="0">{
+                c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                        Code:    http.StatusUnauthorized,
+                        Message: "unauthorized",
+                })
+                return
+        }</span>
+
+        <span class="cov4" title="3">idStr := c.Param("id")
+        id, err := strconv.ParseInt(idStr, 10, 64)
+        if err != nil </span><span class="cov1" title="1">{
+                h.log.Error().Err(err).Str("id", idStr).Msg("ошибка парсинга ID")
+                c.JSON(http.StatusBadRequest, model.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: "некорректный ID задачи",
+                })
+                return
+        }</span>
+
+        <span class="cov3" title="2">task, err := h.taskService.GetTaskByID(c.Request.Context(), id, userID)
+        if err != nil </span><span class="cov1" title="1">{
+                h.log.Error().Err(err).Int64("id", id).Msg("ошибка получения задачи")
+                c.JSON(http.StatusNotFound, model.ErrorResponse{
+                        Code:    http.StatusNotFound,
+                        Message: "задача не найдена",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">c.JSON(http.StatusOK, task)</span>
+}
+
+func (h *TaskHandler) List(c *gin.Context) <span class="cov4" title="3">{
+        userID, ok := h.getUserID(c)
+        if !ok </span><span class="cov0" title="0">{
+                c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                        Code:    http.StatusUnauthorized,
+                        Message: "unauthorized",
+                })
+                return
+        }</span>
+
+        <span class="cov4" title="3">page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+        if err != nil || page &lt; 1 </span><span class="cov1" title="1">{
+                page = 1
+        }</span>
+
+        <span class="cov4" title="3">pageSize, err := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+        if err != nil || pageSize &lt; 1 </span><span class="cov0" title="0">{
+                pageSize = 10
+        }</span>
+
+        <span class="cov4" title="3">tasks, err := h.taskService.GetTaskList(c.Request.Context(), userID, page, pageSize)
+        if err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Msg("ошибка получения списка задач")
+                c.JSON(http.StatusInternalServerError, model.ErrorResponse{
+                        Code:    http.StatusInternalServerError,
+                        Message: "не удалось получить список задач",
+                })
+                return
+        }</span>
+
+        <span class="cov4" title="3">c.JSON(http.StatusOK, tasks)</span>
+}
+
+func (h *TaskHandler) Update(c *gin.Context) <span class="cov3" title="2">{
+        userID, ok := h.getUserID(c)
+        if !ok </span><span class="cov0" title="0">{
+                c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                        Code:    http.StatusUnauthorized,
+                        Message: "unauthorized",
+                })
+                return
+        }</span>
+
+        <span class="cov3" title="2">idStr := c.Param("id")
+        id, err := strconv.ParseInt(idStr, 10, 64)
+        if err != nil </span><span class="cov1" title="1">{
+                h.log.Error().Err(err).Str("id", idStr).Msg("ошибка парсинга ID")
+                c.JSON(http.StatusBadRequest, model.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: "некорректный ID задачи",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">var req model.UpdateTaskRequest
+        if err := c.ShouldBindJSON(&amp;req); err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Msg("ошибка разбора JSON")
+                c.JSON(http.StatusBadRequest, model.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: "некорректные данные запроса",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">task, err := h.taskService.UpdateTask(c.Request.Context(), id, userID, req)
+        if err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Int64("id", id).Msg("ошибка обновления задачи")
+                c.JSON(http.StatusNotFound, model.ErrorResponse{
+                        Code:    http.StatusNotFound,
+                        Message: "задача не найдена или не удалось обновить",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">c.JSON(http.StatusOK, task)</span>
+}
+
+func (h *TaskHandler) Delete(c *gin.Context) <span class="cov3" title="2">{
+        userID, ok := h.getUserID(c)
+        if !ok </span><span class="cov0" title="0">{
+                c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                        Code:    http.StatusUnauthorized,
+                        Message: "unauthorized",
+                })
+                return
+        }</span>
+
+        <span class="cov3" title="2">idStr := c.Param("id")
+        id, err := strconv.ParseInt(idStr, 10, 64)
+        if err != nil </span><span class="cov1" title="1">{
+                h.log.Error().Err(err).Str("id", idStr).Msg("ошибка парсинга ID")
+                c.JSON(http.StatusBadRequest, model.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: "некорректный ID задачи",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">err = h.taskService.DeleteTask(c.Request.Context(), id, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                h.log.Error().Err(err).Int64("id", id).Msg("ошибка удаления задачи")
+                c.JSON(http.StatusNotFound, model.ErrorResponse{
+                        Code:    http.StatusNotFound,
+                        Message: "задача не найдена или не удалось удалить",
+                })
+                return
+        }</span>
+
+        <span class="cov1" title="1">c.Status(http.StatusNoContent)</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package middleware
+
+import (
+        "errors"
+        "github.com/gin-gonic/gin"
+        "github.com/golang-jwt/jwt/v5"
+        "github.com/kkboranbay/task-service/internal/config"
+        "github.com/kkboranbay/task-service/internal/model"
+        "github.com/rs/zerolog"
+        "net/http"
+        "strings"
+        "time"
+)
+
+type UserClaims struct {
+        UserID int64 `json:"user_id"`
+        jwt.RegisteredClaims
+}
+
+type JWTMiddleware struct {
+        config config.AuthConfig
+        log    *zerolog.Logger
+}
+
+func NewJWTMiddleware(config config.AuthConfig, logger *zerolog.Logger) *JWTMiddleware <span class="cov0" title="0">{
+        return &amp;JWTMiddleware{config, logger}
+}</span>
+
+func (m *JWTMiddleware) AuthRequired() gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                authHeader := c.GetHeader("Authorization")
+                if authHeader == "" </span><span class="cov0" title="0">{
+                        c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                                Code:    http.StatusUnauthorized,
+                                Message: "токен аутентификации отсутствует",
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                <span class="cov0" title="0">splitToken := strings.Split(authHeader, "Bearer ")
+                if len(splitToken) != 2 </span><span class="cov0" title="0">{
+                        c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                                Code:    http.StatusUnauthorized,
+                                Message: "неверный формат токена",
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                <span class="cov0" title="0">tokenString := splitToken[1]
+
+                claims := &amp;UserClaims{}
+                token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov0" title="0">{
+                        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok </span><span class="cov0" title="0">{
+                                return nil, errors.New("неожиданный алгоритм подписи")
+                        }</span>
+
+                        <span class="cov0" title="0">return []byte(m.config.JWTSecret), nil</span>
+                })
+
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        m.log.Error().Err(err).Str("token", tokenString).Msg("ошибка парсинга JWT токена")
+                        c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                                Code:    http.StatusUnauthorized,
+                                Message: "недействительный токен аутентификации",
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                <span class="cov0" title="0">if !token.Valid </span><span class="cov0" title="0">{
+                        c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+                                Code:    http.StatusUnauthorized,
+                                Message: "недействительный токен аутентификации",
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                <span class="cov0" title="0">c.Set("user_id", claims.UserID)
+
+                c.Next()</span>
+        }
+}
+
+func (m *JWTMiddleware) GenerateToken(userID int64) (string, error) <span class="cov0" title="0">{
+        now := time.Now()
+        claims := UserClaims{
+                UserID: userID,
+                RegisteredClaims: jwt.RegisteredClaims{
+                        ExpiresAt: jwt.NewNumericDate(now.Add(m.config.TokenExpireDelta)),
+                        IssuedAt:  jwt.NewNumericDate(now),
+                        NotBefore: jwt.NewNumericDate(now),
+                },
+        }
+
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+        signedToken, err := token.SignedString([]byte(m.config.JWTSecret))
+        if err != nil </span><span class="cov0" title="0">{
+                m.log.Error().Err(err).Int64("user_id", userID).Msg("ошибка подписи JWT токена")
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">return signedToken, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package middleware
+
+import (
+        "fmt"
+        "github.com/gin-gonic/gin"
+        "github.com/rs/zerolog"
+        "time"
+)
+
+type RequestLogger struct {
+        log *zerolog.Logger
+}
+
+func NewRequestLogger(log *zerolog.Logger) *RequestLogger <span class="cov0" title="0">{
+        return &amp;RequestLogger{log}
+}</span>
+
+func (l *RequestLogger) Middleware() gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                start := time.Now()
+                path := c.Request.URL.Path
+                method := c.Request.Method
+
+                c.Next()
+
+                duration := time.Since(start)
+                status := c.Writer.Status()
+
+                logEvent := l.log.Info()
+
+                if status &gt;= 400 </span><span class="cov0" title="0">{
+                        logEvent = l.log.Warn()
+                }</span>
+                <span class="cov0" title="0">if status &gt;= 500 </span><span class="cov0" title="0">{
+                        logEvent = l.log.Error()
+                }</span>
+
+                <span class="cov0" title="0">logEvent.
+                        Str("method", method).
+                        Str("path", path).
+                        Int("status", status).
+                        Dur("duration", duration).
+                        Str("client_ip", c.ClientIP()).
+                        Str("user_agent", c.Request.UserAgent()).
+                        Msg(fmt.Sprintf("%s %s %d %s", method, path, status, duration))</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package middleware
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/prometheus/client_golang/prometheus"
+        "github.com/prometheus/client_golang/prometheus/promauto"
+        "strconv"
+        "time"
+)
+
+var (
+        httpRequestsTotal = promauto.NewCounterVec(
+                prometheus.CounterOpts{
+                        Name: "http_requests_total",
+                        Help: "Total number of HTTP requests",
+                },
+                []string{"method", "path", "status"},
+        )
+
+        httpRequestDuration = promauto.NewHistogramVec(
+                prometheus.HistogramOpts{
+                        Name:    "http_request_duration_seconds",
+                        Help:    "HTTP request duration in seconds",
+                        Buckets: prometheus.DefBuckets,
+                },
+                []string{"method", "path", "status"},
+        )
+
+        httpRequestsInFlight = promauto.NewGauge(
+                prometheus.GaugeOpts{
+                        Name: "http_requests_in_flight",
+                        Help: "Current number of HTTP requests being processed",
+                },
+        )
+)
+
+func PrometheusMiddleware() gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                httpRequestsInFlight.Inc()
+                defer httpRequestsInFlight.Dec()
+
+                start := time.Now()
+
+                c.Next()
+
+                duration := time.Since(start).Seconds()
+
+                method := c.Request.Method
+                path := c.FullPath()
+                if path == "" </span><span class="cov0" title="0">{
+                        path = "unknown"
+                }</span>
+                <span class="cov0" title="0">status := strconv.Itoa(c.Writer.Status())
+
+                httpRequestsTotal.WithLabelValues(method, path, status).Inc()
+                httpRequestDuration.WithLabelValues(method, path, status).Observe(duration)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package api
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "github.com/gin-gonic/gin"
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/kkboranbay/task-service/internal/api/handler"
+        "github.com/kkboranbay/task-service/internal/api/middleware"
+        "github.com/kkboranbay/task-service/internal/config"
+        "github.com/kkboranbay/task-service/internal/service"
+        "github.com/prometheus/client_golang/prometheus/promhttp"
+        "github.com/rs/zerolog"
+        "net/http"
+)
+
+type Server struct {
+        httpServer *http.Server
+        router     *gin.Engine
+        db         *pgxpool.Pool
+        log        *zerolog.Logger
+        cfg        config.ServerConfig
+}
+
+func NewServer(
+        db *pgxpool.Pool,
+        taskService *service.TaskService,
+        cfg config.Config,
+        log *zerolog.Logger,
+) *Server <span class="cov0" title="0">{
+        router := gin.New()
+
+        requestLogger := middleware.NewRequestLogger(log)
+        jwtMiddleware := middleware.NewJWTMiddleware(cfg.Auth, log)
+
+        router.Use(requestLogger.Middleware())
+        router.Use(middleware.PrometheusMiddleware())
+        router.Use(gin.Recovery())
+
+        healthHandler := handler.NewHealthHandler(db, log)
+        healthHandler.Register(router)
+
+        router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+        authHandler := handler.NewAuthHandler(jwtMiddleware, log)
+        authHandler.Register(router)
+
+        api := router.Group("/api/v1")
+        api.Use(jwtMiddleware.AuthRequired())
+
+        taskHandler := handler.NewTaskHandler(taskService, log)
+        taskHandler.Register(api)
+
+        httpServer := &amp;http.Server{
+                Addr:         ":" + cfg.Server.Port,
+                Handler:      router,
+                ReadTimeout:  cfg.Server.ReadTimeout,
+                WriteTimeout: cfg.Server.WriteTimeout,
+        }
+
+        return &amp;Server{
+                httpServer: httpServer,
+                router:     router,
+                db:         db,
+                log:        log,
+                cfg:        cfg.Server,
+        }
+}</span>
+
+func (s *Server) Run() error <span class="cov0" title="0">{
+        s.log.Info().Str("addr", s.httpServer.Addr).Msg("Запуск HTTP сервера")
+        if err := s.httpServer.ListenAndServe(); err != nil &amp;&amp; !errors.Is(err, http.ErrServerClosed) </span><span class="cov0" title="0">{
+                return fmt.Errorf("ошибка запуска HTTP сервера: %w", err)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (s *Server) Shutdown(ctx context.Context) error <span class="cov0" title="0">{
+        s.log.Info().Msg("Остановка HTTP сервера...")
+
+        shutdownCtx, cancel := context.WithTimeout(ctx, s.cfg.ShutdownTimeout)
+        defer cancel()
+
+        if err := s.httpServer.Shutdown(shutdownCtx); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("ошибка остановки HTTP сервера: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if s.db != nil </span><span class="cov0" title="0">{
+                s.db.Close()
+        }</span>
+
+        <span class="cov0" title="0">s.log.Info().Msg("HTTP сервер успешно остановлен")
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package config
+
+import (
+        "fmt"
+        "github.com/spf13/viper"
+        "time"
+)
+
+type Config struct {
+        Server   ServerConfig
+        Database DatabaseConfig
+        Auth     AuthConfig
+        Logger   LoggerConfig
+}
+
+type ServerConfig struct {
+        Port            string
+        ReadTimeout     time.Duration
+        WriteTimeout    time.Duration
+        ShutdownTimeout time.Duration
+}
+
+type DatabaseConfig struct {
+        Host     string
+        Port     string
+        User     string
+        Password string
+        DBName   string
+        SSLMode  string
+        MaxConns int
+        Timeout  time.Duration
+}
+
+type AuthConfig struct {
+        JWTSecret        string
+        TokenExpireDelta time.Duration
+}
+
+type LoggerConfig struct {
+        Level string
+}
+
+func LoadConfig() (*Config, error) <span class="cov0" title="0">{
+        viper.SetConfigName("config")
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(".")
+        viper.AddConfigPath("./config")
+        viper.AutomaticEnv()
+
+        viper.SetDefault("SERVER_PORT", "8080")
+        viper.SetDefault("SERVER_READ_TIMEOUT", "5s")
+        viper.SetDefault("SERVER_WRITE_TIMEOUT", "10s")
+        viper.SetDefault("SERVER_SHUTDOWN_TIMEOUT", "5s")
+
+        viper.SetDefault("DB_HOST", "localhost")
+        viper.SetDefault("DB_PORT", "5432")
+        viper.SetDefault("DB_USER", "postgres")
+        viper.SetDefault("DB_PASSWORD", "postgres")
+        viper.SetDefault("DB_NAME", "taskdb")
+        viper.SetDefault("DB_SSLMODE", "disable")
+        viper.SetDefault("DB_MAX_CONNS", 10)
+        viper.SetDefault("DB_TIMEOUT", "5s")
+
+        viper.SetDefault("JWT_SECRET", "qwertyuiopasdfghjklzxcvbnm123456")
+        viper.SetDefault("JWT_EXPIRE_DELTA", "24h")
+
+        viper.SetDefault("LOG_LEVEL", "info")
+
+        if err := viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                if _, ok := err.(viper.ConfigFileNotFoundError); !ok </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("ошибка чтения файла конфигурации: %w", err)
+                }</span>
+        }
+
+        <span class="cov0" title="0">var config Config
+
+        readTimeout, err := time.ParseDuration(viper.GetString("SERVER_READ_TIMEOUT"))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка парсинга SERVER_READ_TIMEOUT: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">writeTimeout, err := time.ParseDuration(viper.GetString("SERVER_WRITE_TIMEOUT"))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка парсинга SERVER_WRITE_TIMEOUT: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">shutdownTimeout, err := time.ParseDuration(viper.GetString("SERVER_SHUTDOWN_TIMEOUT"))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка парсинга SERVER_SHUTDOWN_TIMEOUT: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">config.Server = ServerConfig{
+                Port:            viper.GetString("SERVER_PORT"),
+                ReadTimeout:     readTimeout,
+                WriteTimeout:    writeTimeout,
+                ShutdownTimeout: shutdownTimeout,
+        }
+
+        dbTimeout, err := time.ParseDuration(viper.GetString("DB_TIMEOUT"))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка парсинга DB_TIMEOUT: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">config.Database = DatabaseConfig{
+                Host:     viper.GetString("DB_HOST"),
+                Port:     viper.GetString("DB_PORT"),
+                User:     viper.GetString("DB_USER"),
+                Password: viper.GetString("DB_PASSWORD"),
+                DBName:   viper.GetString("DB_NAME"),
+                SSLMode:  viper.GetString("DB_SSLMODE"),
+                MaxConns: viper.GetInt("DB_MAX_CONNS"),
+                Timeout:  dbTimeout,
+        }
+
+        tokenExpireDelta, err := time.ParseDuration(viper.GetString("JWT_EXPIRE_DELTA"))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка парсинга JWT_EXPIRE_DELTA: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">config.Auth = AuthConfig{
+                JWTSecret:        viper.GetString("JWT_SECRET"),
+                TokenExpireDelta: tokenExpireDelta,
+        }
+
+        config.Logger = LoggerConfig{
+                Level: viper.GetString("LOG_LEVEL"),
+        }
+
+        return &amp;config, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package mocks
+
+import (
+        "context"
+        "github.com/kkboranbay/task-service/internal/model"
+        "github.com/stretchr/testify/mock"
+)
+
+type MockTaskRepository struct {
+        mock.Mock
+}
+
+func (m *MockTaskRepository) Create(ctx context.Context, userID int64, task model.CreateTaskRequest) (*model.Task, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, userID, task)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*model.Task), args.Error(1)</span>
+}
+
+func (m *MockTaskRepository) GetByID(ctx context.Context, id, userID int64) (*model.Task, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, id, userID)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*model.Task), args.Error(1)</span>
+}
+
+func (m *MockTaskRepository) List(ctx context.Context, userID int64, limit, offset int) (*model.TaskListResponse, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, userID, limit, offset)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*model.TaskListResponse), args.Error(1)</span>
+}
+
+func (m *MockTaskRepository) Update(ctx context.Context, id, userID int64, req model.UpdateTaskRequest) (*model.Task, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, id, userID, req)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*model.Task), args.Error(1)</span>
+}
+
+func (m *MockTaskRepository) Delete(ctx context.Context, id, userID int64) error <span class="cov0" title="0">{
+        args := m.Called(ctx, id, userID)
+        return args.Error(0)
+}</span>
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package postgres
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "github.com/jackc/pgx/v5"
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/kkboranbay/task-service/internal/model"
+        "github.com/kkboranbay/task-service/internal/repository"
+        "strings"
+        "time"
+)
+
+type TaskRepository struct {
+        pool *pgxpool.Pool
+}
+
+func NewTaskRepository(pool *pgxpool.Pool) repository.TaskRepository <span class="cov0" title="0">{
+        return &amp;TaskRepository{pool: pool}
+}</span>
+
+func (r *TaskRepository) Create(ctx context.Context, userID int64, req model.CreateTaskRequest) (*model.Task, error) <span class="cov10" title="12">{
+        if strings.TrimSpace(req.Title) == "" </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("title cannot be empty")
+        }</span>
+
+        <span class="cov9" title="11">status := req.Status
+        if status == "" </span><span class="cov9" title="11">{
+                status = model.TaskStatusPending
+        }</span>
+
+        <span class="cov9" title="11">now := time.Now()
+        task := model.Task{
+                Title:       req.Title,
+                Description: req.Description,
+                Status:      status,
+                UserID:      userID,
+                DueDate:     req.DueDate,
+                CreatedAt:   now,
+                UpdatedAt:   now,
+        }
+
+        query := `
+                INSERT INTO tasks (title, description, status, user_id, due_date, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING id
+        `
+
+        err := r.pool.QueryRow(
+                ctx,
+                query,
+                task.Title,
+                task.Description,
+                task.Status,
+                task.UserID,
+                task.DueDate,
+                task.CreatedAt,
+                task.UpdatedAt,
+        ).Scan(&amp;task.ID)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка создания задачи: %w", err)
+        }</span>
+
+        <span class="cov9" title="11">return &amp;task, nil</span>
+}
+
+func (r *TaskRepository) GetByID(ctx context.Context, id, userID int64) (*model.Task, error) <span class="cov8" title="8">{
+        query := `
+                SELECT id, title, description, status, user_id, due_date, created_at, updated_at
+                FROM tasks
+                WHERE id = $1 AND user_id = $2
+        `
+
+        var task model.Task
+
+        err := r.pool.QueryRow(ctx, query, id, userID).Scan(
+                &amp;task.ID,
+                &amp;task.Title,
+                &amp;task.Description,
+                &amp;task.Status,
+                &amp;task.UserID,
+                &amp;task.DueDate,
+                &amp;task.CreatedAt,
+                &amp;task.UpdatedAt,
+        )
+
+        if err != nil </span><span class="cov6" title="5">{
+                if errors.Is(err, pgx.ErrNoRows) </span><span class="cov6" title="5">{
+                        return nil, fmt.Errorf("задача не найдена")
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("ошибка получения задачи: %w", err)</span>
+        }
+
+        <span class="cov4" title="3">return &amp;task, nil</span>
+}
+
+func (r *TaskRepository) List(ctx context.Context, userID int64, limit, offset int) (*model.TaskListResponse, error) <span class="cov6" title="5">{
+        countQuery := `SELECT count(*) FROM tasks WHERE user_id = $1`
+        var total int64
+        err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&amp;total)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка подсчета задач: %w", err)
+        }</span>
+
+        <span class="cov6" title="5">query := `
+                SELECT id, title, description, status, user_id, due_date, created_at, updated_at
+                FROM tasks
+                WHERE user_id = $1
+                ORDER BY created_at DESC
+                LIMIT $2 OFFSET $3
+        `
+
+        rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка получения списка задач: %w", err)
+        }</span>
+        <span class="cov6" title="5">defer rows.Close()
+
+        tasks := make([]model.Task, 0)
+        for rows.Next() </span><span class="cov9" title="11">{
+                var task model.Task
+                err := rows.Scan(
+                        &amp;task.ID,
+                        &amp;task.Title,
+                        &amp;task.Description,
+                        &amp;task.Status,
+                        &amp;task.UserID,
+                        &amp;task.DueDate,
+                        &amp;task.CreatedAt,
+                        &amp;task.UpdatedAt,
+                )
+
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("ошибка сканирования строки: %w", err)
+                }</span>
+                <span class="cov9" title="11">tasks = append(tasks, task)</span>
+        }
+
+        <span class="cov6" title="5">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка обработки строк: %w", err)
+        }</span>
+
+        <span class="cov6" title="5">return &amp;model.TaskListResponse{
+                Total: total,
+                Tasks: tasks,
+        }, nil</span>
+}
+
+func (r *TaskRepository) Update(ctx context.Context, id, userID int64, req model.UpdateTaskRequest) (*model.Task, error) <span class="cov6" title="4">{
+        task, err := r.GetByID(ctx, id, userID)
+        if err != nil </span><span class="cov3" title="2">{
+                return nil, err
+        }</span>
+
+        <span class="cov3" title="2">if req.Title != nil </span><span class="cov3" title="2">{
+                task.Title = *req.Title
+        }</span>
+        <span class="cov3" title="2">if req.Description != nil </span><span class="cov1" title="1">{
+                task.Description = *req.Description
+        }</span>
+        <span class="cov3" title="2">if req.Status != nil </span><span class="cov1" title="1">{
+                task.Status = *req.Status
+        }</span>
+        <span class="cov3" title="2">if req.DueDate != nil </span><span class="cov0" title="0">{
+                task.DueDate = req.DueDate
+        }</span>
+
+        <span class="cov3" title="2">task.UpdatedAt = time.Now()
+
+        query := `
+                UPDATE tasks
+                SET title = $1, description = $2, status = $3, due_date = $4, updated_at = $5
+                WHERE id = $6 AND user_id = $7
+                RETURNING id
+        `
+
+        err = r.pool.QueryRow(
+                ctx,
+                query,
+                task.Title,
+                task.Description,
+                task.Status,
+                task.DueDate,
+                task.UpdatedAt,
+                task.ID,
+                task.UserID,
+        ).Scan(&amp;id)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка обновления задачи: %w", err)
+        }</span>
+
+        <span class="cov3" title="2">return task, nil</span>
+}
+
+func (r *TaskRepository) Delete(ctx context.Context, id, userID int64) error <span class="cov4" title="3">{
+        query := `DELETE FROM tasks WHERE id = $1 AND user_id = $2`
+
+        result, err := r.pool.Exec(ctx, query, id, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("ошибка удаления задачи: %w", err)
+        }</span>
+
+        <span class="cov4" title="3">if result.RowsAffected() == 0 </span><span class="cov3" title="2">{
+                return fmt.Errorf("задача не найдена")
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package service
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "github.com/kkboranbay/task-service/internal/model"
+        "github.com/kkboranbay/task-service/internal/repository"
+        "github.com/rs/zerolog"
+)
+
+type TaskService struct {
+        repo repository.TaskRepository
+        log  *zerolog.Logger
+}
+
+func NewTaskService(repo repository.TaskRepository, log *zerolog.Logger) *TaskService <span class="cov10" title="5">{
+        return &amp;TaskService{
+                repo: repo,
+                log:  log,
+        }
+}</span>
+
+func (s *TaskService) CreateTask(ctx context.Context, userID int64, req model.CreateTaskRequest) (*model.Task, error) <span class="cov7" title="3">{
+        if req.Title == "" </span><span class="cov1" title="1">{
+                return nil, errors.New("отсутствует заголовок задачи")
+        }</span>
+
+        <span class="cov4" title="2">s.log.Info().Int64("user_id", userID).Str("title", req.Title).Msg("создание новой задачи")
+
+        task, err := s.repo.Create(ctx, userID, req)
+        if err != nil </span><span class="cov1" title="1">{
+                s.log.Error().Err(err).Int64("user_id", userID).Str("title", req.Title).Msg("ошибка создания задачи")
+                return nil, fmt.Errorf("не удалось создать задачу: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">s.log.Info().Int64("task_id", task.ID).Int64("user_id", userID).Msg("задача успешно создана")
+        return task, nil</span>
+}
+
+func (s *TaskService) GetTaskByID(ctx context.Context, id, userID int64) (*model.Task, error) <span class="cov4" title="2">{
+        s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("получение задачи по ID")
+
+        task, err := s.repo.GetByID(ctx, id, userID)
+        if err != nil </span><span class="cov1" title="1">{
+                s.log.Error().Err(err).Int64("task_id", id).Int64("user_id", userID).Msg("ошибка получения задачи")
+                return nil, fmt.Errorf("не удалось получить задачу: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return task, nil</span>
+}
+
+func (s *TaskService) GetTaskList(ctx context.Context, userID int64, page, pageSize int) (*model.TaskListResponse, error) <span class="cov10" title="5">{
+        if page &lt; 1 </span><span class="cov1" title="1">{
+                page = 1
+        }</span>
+        <span class="cov10" title="5">if pageSize &lt; 1 </span><span class="cov1" title="1">{
+                pageSize = 10
+        }</span>
+        <span class="cov10" title="5">if pageSize &gt; 100 </span><span class="cov1" title="1">{
+                pageSize = 100
+        }</span>
+
+        <span class="cov10" title="5">offset := (page - 1) * pageSize
+
+        s.log.Info().Int64("user_id", userID).Int("page", page).Int("page_size", pageSize).Msg("получение списка задач")
+
+        resp, err := s.repo.List(ctx, userID, pageSize, offset)
+        if err != nil </span><span class="cov0" title="0">{
+                s.log.Error().Err(err).Int64("user_id", userID).Msg("ошибка получения списка задач")
+                return nil, fmt.Errorf("не удалось получить список задач: %w", err)
+        }</span>
+
+        <span class="cov10" title="5">return resp, nil</span>
+}
+
+func (s *TaskService) UpdateTask(ctx context.Context, id, userID int64, req model.UpdateTaskRequest) (*model.Task, error) <span class="cov7" title="3">{
+        s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("обновление задачи")
+
+        if req.Status != nil </span><span class="cov7" title="3">{
+                status := *req.Status
+                if status != model.TaskStatusPending &amp;&amp; status != model.TaskStatusInProgress &amp;&amp; status != model.TaskStatusCompleted </span><span class="cov1" title="1">{
+                        return nil, errors.New("некорректный статус задачи")
+                }</span>
+        }
+
+        <span class="cov4" title="2">task, err := s.repo.Update(ctx, id, userID, req)
+        if err != nil </span><span class="cov1" title="1">{
+                s.log.Error().Err(err).Int64("task_id", id).Int64("user_id", userID).Msg("ошибка обновления задачи")
+                return nil, fmt.Errorf("не удалось обновить задачу: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("задача успешно обновлена")
+        return task, nil</span>
+}
+
+func (s *TaskService) DeleteTask(ctx context.Context, id, userID int64) error <span class="cov4" title="2">{
+        s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("удаление задачи")
+
+        err := s.repo.Delete(ctx, id, userID)
+        if err != nil </span><span class="cov1" title="1">{
+                s.log.Error().Err(err).Int64("task_id", id).Int64("user_id", userID).Msg("ошибка удаления задачи")
+                return fmt.Errorf("не удалось удалить задачу: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">s.log.Info().Int64("task_id", id).Int64("user_id", userID).Msg("задача успешно удалена")
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package testutils
+
+import (
+        "context"
+        "fmt"
+        "github.com/golang-migrate/migrate/v4"
+        _ "github.com/golang-migrate/migrate/v4/database/postgres"
+        _ "github.com/golang-migrate/migrate/v4/source/file"
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/kkboranbay/task-service/internal/config"
+        pg "github.com/kkboranbay/task-service/pkg/postgres"
+        "github.com/stretchr/testify/require"
+        "os"
+        "path/filepath"
+        "runtime"
+        "testing"
+        "time"
+)
+
+type TestDB struct {
+        Pool   *pgxpool.Pool
+        Config config.DatabaseConfig
+        dbName string
+}
+
+func NewTestDB(t *testing.T) *TestDB <span class="cov0" title="0">{
+        t.Helper()
+
+        dbName := fmt.Sprintf("test_%d", time.Now().UnixNano())
+
+        cfg := config.DatabaseConfig{
+                Host:     getEnvOrDefault("TEST_DB_HOST", "localhost"),
+                Port:     getEnvOrDefault("TEST_DB_PORT", "5432"),
+                User:     getEnvOrDefault("TEST_DB_USER", "postgres"),
+                Password: getEnvOrDefault("TEST_DB_PASSWORD", "postgres"),
+                DBName:   "postgres", // пока подключаемся к default database для создания тестовой
+                SSLMode:  "disable",
+                MaxConns: 5,
+                Timeout:  5 * time.Second,
+        }
+
+        ctx := context.Background()
+
+        adminPool, err := pg.NewPool(ctx, cfg)
+        require.NoError(t, err, "Failed to connect to PostgreSQL")
+
+        _, err = adminPool.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", dbName))
+        require.NoError(t, err, "Failed to create test database")
+        adminPool.Close()
+
+        cfg.DBName = dbName
+        testPool, err := pg.NewPool(ctx, cfg)
+        require.NoError(t, err, "Failed to connect to test database")
+
+        err = runMigrations(ctx, cfg)
+        require.NoError(t, err, "Failed to run migrations")
+
+        return &amp;TestDB{
+                Pool:   testPool,
+                Config: cfg,
+                dbName: dbName,
+        }
+}</span>
+
+func (tdb *TestDB) Close(t *testing.T) <span class="cov0" title="0">{
+        t.Helper()
+
+        if tdb.Pool != nil </span><span class="cov0" title="0">{
+                tdb.Pool.Close()
+        }</span>
+
+        <span class="cov0" title="0">cfg := tdb.Config
+        cfg.DBName = "postgres"
+
+        ctx := context.Background()
+        adminPool, err := pg.NewPool(ctx, cfg)
+        if err != nil </span><span class="cov0" title="0">{
+                t.Logf("Failed to connect for cleanup: %v", err)
+                return
+        }</span>
+        <span class="cov0" title="0">defer adminPool.Close()
+
+        // Принудительно отключаем все соединения к тестовой БД
+        _, err = adminPool.Exec(ctx, fmt.Sprintf(`
+                SELECT pg_terminate_backend(pg_stat_activity.pid)
+                FROM pg_stat_activity
+                WHERE pg_stat_activity.datname = '%s' AND pid &lt;&gt; pg_backend_pid()
+        `, tdb.dbName))
+        if err != nil </span><span class="cov0" title="0">{
+                t.Logf("Failed to terminate connections: %v", err)
+        }</span>
+
+        <span class="cov0" title="0">_, err = adminPool.Exec(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s", tdb.dbName))
+        if err != nil </span><span class="cov0" title="0">{
+                t.Logf("Failed to drop test database: %v", err)
+        }</span>
+}
+
+func (tdb *TestDB) Truncate(t *testing.T) <span class="cov0" title="0">{
+        t.Helper()
+
+        ctx := context.Background()
+        _, err := tdb.Pool.Exec(ctx, "TRUNCATE TABLE tasks RESTART IDENTITY CASCADE")
+        require.NoError(t, err, "Failed to truncate tables")
+}</span>
+
+func runMigrations(ctx context.Context, cfg config.DatabaseConfig) error <span class="cov0" title="0">{
+        _, filename, _, _ := runtime.Caller(0) // путь до текущего файла (database.go)
+        basePath := filepath.Join(filepath.Dir(filename), "../../migrations")
+        sourceURL := "file://" + basePath
+
+        connStr := fmt.Sprintf(
+                "postgres://%s:%s@%s:%s/%s?sslmode=disable",
+                cfg.User,
+                cfg.Password,
+                cfg.Host,
+                cfg.Port,
+                cfg.DBName,
+        )
+
+        m, err := migrate.New(sourceURL, connStr)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create migrate instance: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer m.Close()
+
+        if err := m.Up(); err != nil &amp;&amp; err != migrate.ErrNoChange </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to run migrations: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func getEnvOrDefault(key, defaultValue string) string <span class="cov0" title="0">{
+        if value := os.Getenv(key); value != "" </span><span class="cov0" title="0">{
+                return value
+        }</span>
+        <span class="cov0" title="0">return defaultValue</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package testutils
+
+import (
+        "github.com/kkboranbay/task-service/internal/model"
+        "time"
+)
+
+func TaskFixture(overrides ...func(*model.Task)) *model.Task <span class="cov0" title="0">{
+        task := &amp;model.Task{
+                ID:          1,
+                UserID:      1,
+                Title:       "Test task",
+                Description: "Test Description",
+                Status:      model.TaskStatusPending,
+                CreatedAt:   time.Now(),
+                UpdatedAt:   time.Now(),
+        }
+
+        for _, override := range overrides </span><span class="cov0" title="0">{
+                override(task)
+        }</span>
+
+        <span class="cov0" title="0">return task</span>
+}
+
+func CreateTaskRequestFixture(overrides ...func(*model.CreateTaskRequest)) model.CreateTaskRequest <span class="cov0" title="0">{
+        req := model.CreateTaskRequest{
+                Title:       "Test Task",
+                Description: "Test Description",
+        }
+
+        for _, override := range overrides </span><span class="cov0" title="0">{
+                override(&amp;req)
+        }</span>
+
+        <span class="cov0" title="0">return req</span>
+}
+
+func UpdateTaskRequestFixture(overrides ...func(*model.UpdateTaskRequest)) model.UpdateTaskRequest <span class="cov0" title="0">{
+        status := model.TaskStatusInProgress
+        req := model.UpdateTaskRequest{
+                Title:       StringPtr("Updated Test Task"),
+                Description: StringPtr("Updated Test Description"),
+                Status:      &amp;status,
+        }
+
+        for _, override := range overrides </span><span class="cov0" title="0">{
+                override(&amp;req)
+        }</span>
+
+        <span class="cov0" title="0">return req</span>
+}
+
+func LoginRequestFixture(overrides ...func(*model.LoginRequest)) model.LoginRequest <span class="cov0" title="0">{
+        req := model.LoginRequest{
+                Username: "admin",
+                Password: "admin",
+        }
+
+        for _, override := range overrides </span><span class="cov0" title="0">{
+                override(&amp;req)
+        }</span>
+
+        <span class="cov0" title="0">return req</span>
+}
+
+func StringPtr(s string) *string <span class="cov0" title="0">{
+        return &amp;s
+}</span>
+
+func TaskStatusPtr(s model.TaskStatus) *model.TaskStatus <span class="cov0" title="0">{
+        return &amp;s
+}</span>
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package logger
+
+import (
+        "fmt"
+        "github.com/kkboranbay/task-service/internal/config"
+        "github.com/rs/zerolog"
+        "github.com/rs/zerolog/log"
+        "os"
+        "strings"
+        "time"
+)
+
+func SetupLogger(cfg config.LoggerConfig) <span class="cov0" title="0">{
+        zerolog.TimeFieldFormat = time.RFC3339
+
+        level, err := zerolog.ParseLevel(strings.ToLower(cfg.Level))
+        if err != nil </span><span class="cov0" title="0">{
+                level = zerolog.InfoLevel
+        }</span>
+        <span class="cov0" title="0">zerolog.SetGlobalLevel(level)
+
+        output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+
+        output.FormatLevel = func(i interface{}) string </span><span class="cov0" title="0">{
+                return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
+        }</span>
+        <span class="cov0" title="0">output.FormatMessage = func(i interface{}) string </span><span class="cov0" title="0">{
+                return fmt.Sprintf("| %s |", i)
+        }</span>
+        <span class="cov0" title="0">output.FormatFieldName = func(i interface{}) string </span><span class="cov0" title="0">{
+                return fmt.Sprintf("%s:", i)
+        }</span>
+        <span class="cov0" title="0">output.FormatFieldValue = func(i interface{}) string </span><span class="cov0" title="0">{
+                return fmt.Sprintf("%s", i)
+        }</span>
+
+        <span class="cov0" title="0">log.Logger = zerolog.New(output).With().Timestamp().Caller().Logger()</span>
+}
+
+// глобальный логгер для удобства
+func L() *zerolog.Logger <span class="cov0" title="0">{
+        return &amp;log.Logger
+}</span>
+
+// логгер с добавленным полем
+func WithField(key string, value interface{}) *zerolog.Logger <span class="cov0" title="0">{
+        logger := log.With().Interface(key, value).Logger()
+        return &amp;logger
+}</span>
+
+// логгер с добавленными полями
+func WithFields(fields map[string]interface{}) *zerolog.Logger <span class="cov0" title="0">{
+        ctx := log.With()
+        for k, v := range fields </span><span class="cov0" title="0">{
+                ctx = ctx.Interface(k, v)
+        }</span>
+        <span class="cov0" title="0">logger := ctx.Logger()
+        return &amp;logger</span>
+}
+
+// логгер с добавленной ошибкой
+func WithError(err error) *zerolog.Logger <span class="cov0" title="0">{
+        logger := log.With().Err(err).Logger()
+        return &amp;logger
+}</span>
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package postgres
+
+import (
+        "context"
+        "fmt"
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/kkboranbay/task-service/internal/config"
+)
+
+func NewPool(ctx context.Context, cfg config.DatabaseConfig) (*pgxpool.Pool, error) <span class="cov0" title="0">{
+        dsn := fmt.Sprintf(
+                "postgres://%s:%s@%s:%s/%s?sslmode=%s&amp;pool_max_conns=%d",
+                cfg.User,
+                cfg.Password,
+                cfg.Host,
+                cfg.Port,
+                cfg.DBName,
+                cfg.SSLMode,
+                cfg.MaxConns,
+        )
+
+        poolConfig, err := pgxpool.ParseConfig(dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка парсинга конфигурации пула соединений: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">poolConfig.ConnConfig.ConnectTimeout = cfg.Timeout
+
+        pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка создания пула соединений: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
+        defer cancel()
+
+        if err := pool.Ping(ctx); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("ошибка подключения к базе данных: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return pool, nil</span>
+}
+
+func Close(pool *pgxpool.Pool) <span class="cov0" title="0">{
+        if pool != nil </span><span class="cov0" title="0">{
+                pool.Close()
+        }</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
