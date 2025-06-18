@@ -282,6 +282,19 @@ func (suite *E2ETestSuite) TestUnauthorizedAccess() {
 	assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode)
 }
 
+func (suite *E2ETestSuite) TestInvalidToken() {
+	req, err := http.NewRequest("GET", suite.server.URL+"/api/v1/tasks", nil)
+	require.NoError(suite.T(), err)
+
+	req.Header.Set("Authorization", "Bearer invalid-token")
+
+	resp, err := suite.httpClient.Do(req)
+	require.NoError(suite.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode)
+}
+
 func TestE2ESuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }
