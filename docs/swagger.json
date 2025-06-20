@@ -1,0 +1,661 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API для управления задачами с JWT авторизацией",
+        "title": "Task Service API",
+        "termsOfService": "https://taskservice.com/terms",
+        "contact": {
+            "name": "API Support",
+            "url": "https://taskservice.com/support",
+            "email": "support@taskservice.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/v1/tasks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список задач пользователя с поддержкой пагинации",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Получить список задач",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Номер страницы",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Количество элементов на странице",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список задач",
+                        "schema": {
+                            "$ref": "#/definitions/model.TaskListResponseSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры запроса",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Создает новую задачу для авторизованного пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Создать новую задачу",
+                "parameters": [
+                    {
+                        "description": "Данные новой задачи",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateTaskRequestSwagger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Задача успешно создана",
+                        "schema": {
+                            "$ref": "#/definitions/model.TaskSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные данные запроса",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tasks/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает задачу по её уникальному идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Получить задачу по ID",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID задачи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Данные задачи",
+                        "schema": {
+                            "$ref": "#/definitions/model.TaskSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный ID задачи",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "404": {
+                        "description": "Задача не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обновляет данные существующей задачи (частичное обновление)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Обновить задачу",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID задачи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Обновляемые данные задачи",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateTaskRequestSwagger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Обновленная задача",
+                        "schema": {
+                            "$ref": "#/definitions/model.TaskSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные данные запроса",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "404": {
+                        "description": "Задача не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Удаляет задачу по её уникальному идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Удалить задачу",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID задачи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Задача успешно удалена"
+                    },
+                    "400": {
+                        "description": "Некорректный ID задачи",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "404": {
+                        "description": "Задача не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Выполняет вход пользователя в систему и возвращает JWT токен",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Авторизация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для входа",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LoginRequestSwagger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешная авторизация",
+                        "schema": {
+                            "$ref": "#/definitions/model.LoginResponseSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные данные запроса",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "401": {
+                        "description": "Неверные учетные данные",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Возвращает статус работоспособности API сервиса",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Проверка состояния сервиса",
+                "responses": {
+                    "200": {
+                        "description": "Сервис работает нормально",
+                        "schema": {
+                            "$ref": "#/definitions/model.HealthResponseSwagger"
+                        }
+                    },
+                    "500": {
+                        "description": "Сервис недоступен",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponseSwagger"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.CreateTaskRequestSwagger": {
+            "description": "Данные для создания новой задачи",
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Подробное описание задачи (необязательное поле)\n@example \"Пройти курс по Go и создать REST API\"",
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Пройти курс по Go и создать REST API"
+                },
+                "title": {
+                    "description": "Заголовок задачи (обязательное поле)\n@example \"Изучить Go\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "Изучить Go"
+                }
+            }
+        },
+        "model.ErrorResponseSwagger": {
+            "description": "Стандартный формат ошибки API",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "HTTP код ошибки\n@example 400",
+                    "type": "integer",
+                    "example": 400
+                },
+                "details": {
+                    "description": "Подробности ошибки (необязательное поле)\n@example \"Поле 'title' обязательно для заполнения\"",
+                    "type": "string",
+                    "example": "Поле 'title' обязательно для заполнения"
+                },
+                "message": {
+                    "description": "Сообщение об ошибке\n@example \"Некорректные данные запроса\"",
+                    "type": "string",
+                    "example": "Некорректные данные запроса"
+                }
+            }
+        },
+        "model.HealthResponseSwagger": {
+            "description": "Состояние сервиса",
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "Статус сервиса\n@example \"ok\"",
+                    "type": "string",
+                    "example": "ok"
+                },
+                "timestamp": {
+                    "description": "Временная метка\n@example \"2024-01-15T10:30:00Z\"",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "version": {
+                    "description": "Версия API\n@example \"1.0.0\"",
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "model.LoginRequestSwagger": {
+            "description": "Данные для входа в систему",
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "description": "Пароль пользователя\n@example \"admin\"",
+                    "type": "string",
+                    "example": "admin"
+                },
+                "username": {
+                    "description": "Имя пользователя\n@example \"admin\"",
+                    "type": "string",
+                    "example": "admin"
+                }
+            }
+        },
+        "model.LoginResponseSwagger": {
+            "description": "Ответ с JWT токеном",
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "description": "Время истечения токена (в секундах)\n@example 86400",
+                    "type": "integer",
+                    "example": 86400
+                },
+                "token": {
+                    "description": "JWT токен для авторизации\n@example \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"",
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "model.TaskListResponseSwagger": {
+            "description": "Список задач с пагинацией",
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "description": "Лимит записей на странице\n@example 10",
+                    "type": "integer",
+                    "example": 10
+                },
+                "offset": {
+                    "description": "Смещение (количество пропущенных записей)\n@example 0",
+                    "type": "integer",
+                    "example": 0
+                },
+                "tasks": {
+                    "description": "Массив задач",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TaskSwagger"
+                    }
+                },
+                "total": {
+                    "description": "Общее количество задач\n@example 25",
+                    "type": "integer",
+                    "example": 25
+                }
+            }
+        },
+        "model.TaskStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "in_progress",
+                "completed"
+            ],
+            "x-enum-varnames": [
+                "TaskStatusPending",
+                "TaskStatusInProgress",
+                "TaskStatusCompleted"
+            ]
+        },
+        "model.TaskSwagger": {
+            "description": "Модель задачи в системе",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "Время создания задачи\n@example \"2024-01-15T10:30:00Z\"",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "description": {
+                    "description": "Подробное описание задачи\n@example \"Пройти курс по Go и создать REST API\"",
+                    "type": "string",
+                    "example": "Пройти курс по Go и создать REST API"
+                },
+                "id": {
+                    "description": "Уникальный идентификатор задачи\n@example 1",
+                    "type": "integer",
+                    "example": 1
+                },
+                "status": {
+                    "description": "Статус выполнения задачи\n@example \"pending\"\n@Enum pending in_progress completed cancelled",
+                    "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed",
+                        "cancelled"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.TaskStatus"
+                        }
+                    ],
+                    "example": "pending"
+                },
+                "title": {
+                    "description": "Заголовок задачи\n@example \"Изучить Go\"",
+                    "type": "string",
+                    "example": "Изучить Go"
+                },
+                "updated_at": {
+                    "description": "Время последнего обновления задачи\n@example \"2024-01-15T10:30:00Z\"",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "user_id": {
+                    "description": "Идентификатор пользователя-владельца задачи\n@example 123",
+                    "type": "integer",
+                    "example": 123
+                }
+            }
+        },
+        "model.UpdateTaskRequestSwagger": {
+            "description": "Данные для обновления существующей задачи",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Подробное описание задачи (необязательное поле)\n@example \"Пройти курс по Go, создать REST API и добавить тесты\"",
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Пройти курс по Go, создать REST API и добавить тесты"
+                },
+                "status": {
+                    "description": "Статус выполнения задачи (необязательное поле)\n@example \"in_progress\"\n@Enum pending in_progress completed cancelled",
+                    "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed",
+                        "cancelled"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.TaskStatus"
+                        }
+                    ],
+                    "example": "in_progress"
+                },
+                "title": {
+                    "description": "Заголовок задачи (необязательное поле)\n@example \"Изучить Go (обновлено)\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "Изучить Go (обновлено)"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Введите 'Bearer ' + ваш JWT токен",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "tags": [
+        {
+            "description": "Операции авторизации и аутентификации",
+            "name": "Authentication"
+        },
+        {
+            "description": "Операции с задачами (CRUD)",
+            "name": "Tasks"
+        },
+        {
+            "description": "Проверка состояния сервиса",
+            "name": "Health"
+        }
+    ]
+}

@@ -1,0 +1,505 @@
+basePath: /
+definitions:
+  model.CreateTaskRequestSwagger:
+    description: Данные для создания новой задачи
+    properties:
+      description:
+        description: |-
+          Подробное описание задачи (необязательное поле)
+          @example "Пройти курс по Go и создать REST API"
+        example: Пройти курс по Go и создать REST API
+        maxLength: 1000
+        type: string
+      title:
+        description: |-
+          Заголовок задачи (обязательное поле)
+          @example "Изучить Go"
+        example: Изучить Go
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  model.ErrorResponseSwagger:
+    description: Стандартный формат ошибки API
+    properties:
+      code:
+        description: |-
+          HTTP код ошибки
+          @example 400
+        example: 400
+        type: integer
+      details:
+        description: |-
+          Подробности ошибки (необязательное поле)
+          @example "Поле 'title' обязательно для заполнения"
+        example: Поле 'title' обязательно для заполнения
+        type: string
+      message:
+        description: |-
+          Сообщение об ошибке
+          @example "Некорректные данные запроса"
+        example: Некорректные данные запроса
+        type: string
+    type: object
+  model.HealthResponseSwagger:
+    description: Состояние сервиса
+    properties:
+      status:
+        description: |-
+          Статус сервиса
+          @example "ok"
+        example: ok
+        type: string
+      timestamp:
+        description: |-
+          Временная метка
+          @example "2024-01-15T10:30:00Z"
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      version:
+        description: |-
+          Версия API
+          @example "1.0.0"
+        example: 1.0.0
+        type: string
+    type: object
+  model.LoginRequestSwagger:
+    description: Данные для входа в систему
+    properties:
+      password:
+        description: |-
+          Пароль пользователя
+          @example "admin"
+        example: admin
+        type: string
+      username:
+        description: |-
+          Имя пользователя
+          @example "admin"
+        example: admin
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  model.LoginResponseSwagger:
+    description: Ответ с JWT токеном
+    properties:
+      expires_in:
+        description: |-
+          Время истечения токена (в секундах)
+          @example 86400
+        example: 86400
+        type: integer
+      token:
+        description: |-
+          JWT токен для авторизации
+          @example "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  model.TaskListResponseSwagger:
+    description: Список задач с пагинацией
+    properties:
+      limit:
+        description: |-
+          Лимит записей на странице
+          @example 10
+        example: 10
+        type: integer
+      offset:
+        description: |-
+          Смещение (количество пропущенных записей)
+          @example 0
+        example: 0
+        type: integer
+      tasks:
+        description: Массив задач
+        items:
+          $ref: '#/definitions/model.TaskSwagger'
+        type: array
+      total:
+        description: |-
+          Общее количество задач
+          @example 25
+        example: 25
+        type: integer
+    type: object
+  model.TaskStatus:
+    enum:
+    - pending
+    - in_progress
+    - completed
+    type: string
+    x-enum-varnames:
+    - TaskStatusPending
+    - TaskStatusInProgress
+    - TaskStatusCompleted
+  model.TaskSwagger:
+    description: Модель задачи в системе
+    properties:
+      created_at:
+        description: |-
+          Время создания задачи
+          @example "2024-01-15T10:30:00Z"
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      description:
+        description: |-
+          Подробное описание задачи
+          @example "Пройти курс по Go и создать REST API"
+        example: Пройти курс по Go и создать REST API
+        type: string
+      id:
+        description: |-
+          Уникальный идентификатор задачи
+          @example 1
+        example: 1
+        type: integer
+      status:
+        allOf:
+        - $ref: '#/definitions/model.TaskStatus'
+        description: |-
+          Статус выполнения задачи
+          @example "pending"
+          @Enum pending in_progress completed cancelled
+        enum:
+        - pending
+        - in_progress
+        - completed
+        - cancelled
+        example: pending
+      title:
+        description: |-
+          Заголовок задачи
+          @example "Изучить Go"
+        example: Изучить Go
+        type: string
+      updated_at:
+        description: |-
+          Время последнего обновления задачи
+          @example "2024-01-15T10:30:00Z"
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      user_id:
+        description: |-
+          Идентификатор пользователя-владельца задачи
+          @example 123
+        example: 123
+        type: integer
+    type: object
+  model.UpdateTaskRequestSwagger:
+    description: Данные для обновления существующей задачи
+    properties:
+      description:
+        description: |-
+          Подробное описание задачи (необязательное поле)
+          @example "Пройти курс по Go, создать REST API и добавить тесты"
+        example: Пройти курс по Go, создать REST API и добавить тесты
+        maxLength: 1000
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/model.TaskStatus'
+        description: |-
+          Статус выполнения задачи (необязательное поле)
+          @example "in_progress"
+          @Enum pending in_progress completed cancelled
+        enum:
+        - pending
+        - in_progress
+        - completed
+        - cancelled
+        example: in_progress
+      title:
+        description: |-
+          Заголовок задачи (необязательное поле)
+          @example "Изучить Go (обновлено)"
+        example: Изучить Go (обновлено)
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@taskservice.com
+    name: API Support
+    url: https://taskservice.com/support
+  description: REST API для управления задачами с JWT авторизацией
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://taskservice.com/terms
+  title: Task Service API
+  version: "1.0"
+paths:
+  /api/v1/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список задач пользователя с поддержкой пагинации
+      parameters:
+      - default: 1
+        description: Номер страницы
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        description: Количество элементов на странице
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач
+          schema:
+            $ref: '#/definitions/model.TaskListResponseSwagger'
+        "400":
+          description: Некорректные параметры запроса
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Получить список задач
+      tags:
+      - Tasks
+    post:
+      consumes:
+      - application/json
+      description: Создает новую задачу для авторизованного пользователя
+      parameters:
+      - description: Данные новой задачи
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateTaskRequestSwagger'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Задача успешно создана
+          schema:
+            $ref: '#/definitions/model.TaskSwagger'
+        "400":
+          description: Некорректные данные запроса
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Создать новую задачу
+      tags:
+      - Tasks
+  /api/v1/tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет задачу по её уникальному идентификатору
+      parameters:
+      - description: ID задачи
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Задача успешно удалена
+        "400":
+          description: Некорректный ID задачи
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "404":
+          description: Задача не найдена
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Удалить задачу
+      tags:
+      - Tasks
+    get:
+      consumes:
+      - application/json
+      description: Возвращает задачу по её уникальному идентификатору
+      parameters:
+      - description: ID задачи
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные задачи
+          schema:
+            $ref: '#/definitions/model.TaskSwagger'
+        "400":
+          description: Некорректный ID задачи
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "404":
+          description: Задача не найдена
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Получить задачу по ID
+      tags:
+      - Tasks
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные существующей задачи (частичное обновление)
+      parameters:
+      - description: ID задачи
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Обновляемые данные задачи
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateTaskRequestSwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленная задача
+          schema:
+            $ref: '#/definitions/model.TaskSwagger'
+        "400":
+          description: Некорректные данные запроса
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "404":
+          description: Задача не найдена
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Обновить задачу
+      tags:
+      - Tasks
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Выполняет вход пользователя в систему и возвращает JWT токен
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequestSwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная авторизация
+          schema:
+            $ref: '#/definitions/model.LoginResponseSwagger'
+        "400":
+          description: Некорректные данные запроса
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "401":
+          description: Неверные учетные данные
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+      summary: Авторизация пользователя
+      tags:
+      - Authentication
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статус работоспособности API сервиса
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Сервис работает нормально
+          schema:
+            $ref: '#/definitions/model.HealthResponseSwagger'
+        "500":
+          description: Сервис недоступен
+          schema:
+            $ref: '#/definitions/model.ErrorResponseSwagger'
+      summary: Проверка состояния сервиса
+      tags:
+      - Health
+securityDefinitions:
+  BearerAuth:
+    description: Введите 'Bearer ' + ваш JWT токен
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
+tags:
+- description: Операции авторизации и аутентификации
+  name: Authentication
+- description: Операции с задачами (CRUD)
+  name: Tasks
+- description: Проверка состояния сервиса
+  name: Health

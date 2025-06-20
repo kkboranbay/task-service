@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "github.com/kkboranbay/task-service/docs"
 	"github.com/kkboranbay/task-service/internal/api"
 	"github.com/kkboranbay/task-service/internal/config"
 	"github.com/kkboranbay/task-service/internal/repository/postgres"
@@ -12,6 +13,35 @@ import (
 	"os/signal"
 	"syscall"
 )
+
+// @title Task Service API
+// @version 1.0
+// @description REST API для управления задачами с JWT авторизацией
+// @termsOfService https://taskservice.com/terms
+
+// @contact.name API Support
+// @contact.url https://taskservice.com/support
+// @contact.email support@taskservice.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Введите 'Bearer ' + ваш JWT токен
+
+// @tag.name Authentication
+// @tag.description Операции авторизации и аутентификации
+
+// @tag.name Tasks
+// @tag.description Операции с задачами (CRUD)
+
+// @tag.name Health
+// @tag.description Проверка состояния сервиса
 
 func main() {
 	cfg, err := config.LoadConfig()

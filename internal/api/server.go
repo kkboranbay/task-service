@@ -12,6 +12,8 @@ import (
 	"github.com/kkboranbay/task-service/internal/service"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 )
 
@@ -42,6 +44,9 @@ func NewServer(
 	healthHandler.Register(router)
 
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	authHandler := handler.NewAuthHandler(jwtMiddleware, log)
 	authHandler.Register(router)
